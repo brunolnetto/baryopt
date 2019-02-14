@@ -33,7 +33,6 @@ function [x, xs] = recexpbary(oracle, x0, nu, ...
         xhat = (1/m)*(lambda*m_1*xhat_1 + x*ei);
         
         xs = [xs; xhat];
-        norm(xhat - xhat_1)
         solution_found = i >= iterations;
         
         % Updates
