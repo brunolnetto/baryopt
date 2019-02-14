@@ -1,4 +1,13 @@
 function xhat = expbary(oracle, x, nu)
+% Batch barycenter algorithm for direct optimization
+% https://arxiv.org/abs/1801.10533
+% In:
+%   - oracle [function]: Oracle function
+%   - x []: Query values
+%   - nu []: positive value (Caution on its value due overflow)
+% Out:
+%   - xhat []: Optimum position
+
     [m, n] = size(x);
     
     Si = 0;
