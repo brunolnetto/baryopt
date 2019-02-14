@@ -2,10 +2,10 @@ oracle = @(x) sum(x.^2);
 
 nu = 1;
 error = 1e-3;
-iterations = 1000;
-sigma = 1;
-zeta = 0.5;
-lambda = 1;
+iterations = 10000;
+sigma = 0.1;
+zeta = 0.1;
+lambda = 0.5;
 
 a = -10;
 b = 10;
