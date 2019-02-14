@@ -1,4 +1,41 @@
-x2 = @(x) x^2;
+oracle = @(x) sum(x.^2);
 
-x0 = linspace(-5, 10, 100).';
-x = expbary(x2, x0, 1);
+nu = 1;
+error = 1e-3;
+iterations = 1000;
+sigma = 1;
+zeta = 0.5;
+lambda = 1;
+
+a = -10;
+b = 10;
+n = 100;
+
+% Batch version
+x01 = uniform(a, b, [n, 2]);
+x1 = expbary(oracle, x01, nu);
+
+% Recursive version
+oracle = @(x) sum(x.^2);
+x02 = [10, 10];
+[x2, xs] = recexpbary(oracle, x02, nu, ...
+                      sigma, zeta, lambda, iterations);
+
+x = linspace(-10, 10);
+y = linspace(-10, 10);
+[X,Y] = meshgrid(x,y);
+Z = X.^2 + Y.^2;
+
+figure
+contour(X, Y, Z)
+hold on;
+plot(x01(:, 1), x01(:, 2), '*');
+hold on
+plot(x1(1), x1(2), 'x');
+hold on
+plot(xs(:, 1), xs(:, 2));
+hold on
+plot(xs(:, 1), xs(:, 2), 'o');
+hold off
+
+axis square
