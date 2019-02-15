@@ -5,12 +5,12 @@ clc
 oracle = @(x) sum(x.^2);
 
 nu = 2;
-iterations = 10000;
+iterations = 5000;
 
 sigma = 0.5;
 zeta = 0;
-lambda = 0.95;
-gamma = 0.5;
+lambda = 1;
+gamma = 0.25;
 
 path = [pwd '/images/'];
 fname = 'shapefactor';
@@ -47,7 +47,9 @@ hold on
 plot(xs(:, 1), xs(:, 2), 'o');
 hold off
 
-titletxt = sprintf(['$\\sigma$ = ', num2str(sigma), ', ', ...
+titletxt = sprintf(['$n$ = ', num2str(iterations), ', ', ...
+                    '$\\nu$ = ', num2str(nu), ', ', ...
+                    '$\\sigma$ = ', num2str(sigma), ', ', ...
                     '$\\xi$ =', num2str(zeta), ', ', ...
                     '$\\lambda$ =', num2str(lambda), ', ', ...
                     '$\\gamma$ =', num2str(gamma)], sigma, zeta, lambda, gamma);
