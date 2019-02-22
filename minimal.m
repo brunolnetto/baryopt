@@ -31,7 +31,7 @@ oracle = @(x) sum(x.^2);
 x02 = [10, 10];
 [x2, xs] = recexpbary(oracle, x02, nu, ...
                       sigma, zeta, lambda, gamma, ...
-                      iterations, 'shape');
+                      iterations, 'normal');
 
 x = linspace(-10, 10);
 y = linspace(-10, 10);
