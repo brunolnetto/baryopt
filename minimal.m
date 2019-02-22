@@ -2,8 +2,10 @@ close all
 clear all
 clc
 
+% Objective function
 oracle = @(x) sum(x.^2);
 
+% Method hyperparameter
 nu = 2;
 iterations = 5000;
 
@@ -12,6 +14,7 @@ zeta = 0;
 lambda = 1;
 gamma = 0.25;
 
+% Save folder
 path = [pwd '/images/'];
 fname = 'shapefactor';
 
