@@ -1,11 +1,9 @@
-function [x, xs] = recexpbary(oracle, x0, nu, ...
-                              sigma, zeta, lambda, gamma, ...
-                              iterations, method)
+function [x, xs] = drecexpbary(oracle, x0, nu, sigma, zeta, lambda, ...
+                              iterations)
 % Recursive barycenter algorithm for direct optimization
-% https://arxiv.org/abs/1801.10533
 % In:
 %   - oracle [function]: Oracle function
-%   - x0 []: Query values
+%   - x0 []: Initial query values
 %   - nu []: positive value (Caution on its value due overflow)
 %   - sigma []: Std deviation of normal distribution
 %   - zeta []: Proportional value for mean of normal distribution
@@ -26,22 +24,14 @@ function [x, xs] = recexpbary(oracle, x0, nu, ...
     i = 1;
     while(~solution_found)
         i = i + 1;
+        z = normrnd(zeta*deltax_1, sigma);
         
-        if(strcmp(method, 'shape'))
-%             an = rand(size(x0));
-            an = normrnd(zeta*deltax_1, sigma);
-            z = an*(fis(i-1)/max(fis))^gamma;
-        elseif(strcmp(method, 'normal'))
-            z = normrnd(zeta*deltax_1, sigma);
-        else
-            error('method MUST be rather normal or shape');
-        end
         x = xhat_1 + z;
         
-        ei = exp(-nu*oracle(x));
+        e_i = exp(-nu*oracle(x));
         
-        m = lambda*m_1 + ei;
-        xhat = (1/m)*(lambda*m_1*xhat_1 + x*ei);
+        m = lambda*m_1 + e_i;
+        xhat = (1/m)*(lambda*m_1*xhat_1 + x*e_i);
         
         xs = [xs; xhat];
         solution_found = i >= iterations;

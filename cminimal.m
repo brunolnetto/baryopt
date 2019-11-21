@@ -2,39 +2,29 @@ close all
 clear all
 clc
 
-% Objective function
-oracle = @(x) sum(x.^2);
-
 % Method hyperparameter
-nu = 2;
-iterations = 5000;
-
-sigma = 0.5;
-zeta = 0;
+nu = 1;
+Sigma = [0.2; 0.2];
 lambda = 1;
-gamma = 0.25;
+
+% Time integral
+time = 0:0.1:1;
 
 % Save folder
 path = [pwd '/images/'];
-fname = 'shapefactor';
+fname = 'continuous';
 
-a = -10;
-b = 10;
+a = -1;
+b = 1;
 n = 100;
-
-% Batch version
-x01 = uniform(a, b, [n, 2]);
-x1 = expbary(oracle, x01, nu);
 
 % Recursive version
 oracle = @(x) sum(x.^2);
-x02 = [10, 10];
-[x2, xs] = recexpbary(oracle, x02, nu, ...
-                      sigma, zeta, lambda, gamma, ...
-                      iterations, 'normal');
+x0 = [1; 1];
+[x, xs] = crecexpbary(oracle, x0, nu, Sigma, lambda, time);
 
-x = linspace(-10, 10);
-y = linspace(-10, 10);
+x = linspace(-1, 1);
+y = linspace(-1, 1);
 [X,Y] = meshgrid(x,y);
 Z = X.^2 + Y.^2;
 
@@ -53,13 +43,13 @@ hold off
 titletxt = sprintf(['$n$ = ', num2str(iterations), ', ', ...
                     '$\\nu$ = ', num2str(nu), ', ', ...
                     '$\\sigma$ = ', num2str(sigma), ', ', ...
-                    '$\\xi$ =', num2str(zeta), ', ', ...
-                    '$\\lambda$ =', num2str(lambda), ', ', ...
-                    '$\\gamma$ =', num2str(gamma)], sigma, zeta, lambda, gamma);
+                    '$\\xi$ = ', num2str(zeta), ', ', ...
+                    '$\\lambda$ = ', num2str(lambda)], ...
+                    sigma, zeta, lambda);
 htitle = title(titletxt);
 htitle.Interpreter = 'latex';
-xlabel('x');
-ylabel('y');
+xlabel('x', 'interpreter', 'latex');
+ylabel('y', 'interpreter', 'latex');
 
 axis square
 
