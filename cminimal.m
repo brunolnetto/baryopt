@@ -5,13 +5,13 @@ clc
 n = 2;
 
 % Method hyperparameter
-nu = 1;
+nu = 8;
 sigma = 1;
 Sigma = sigma*ones(n, 1);
-lambda = 0.98;
+lambda = 1;
 
 % Time integral
-time = 0:0.01:100;
+time = 0:0.01:1000;
 
 % Recursive version
 oracle = @(x) sum(x.^2);
