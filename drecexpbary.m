@@ -1,5 +1,6 @@
-function [x, xs] = drecexpbary(oracle, x0, nu, sigma, zeta, lambda, ...
-                              iterations)
+function [ms, x, xs] = drecexpbary(oracle, x0, ...
+                                   nu, sigma, zeta, lambda, ...
+                                   iterations)
 % Recursive barycenter algorithm for direct optimization
 % In:
 %   - oracle [function]: Oracle function
@@ -21,6 +22,8 @@ function [x, xs] = drecexpbary(oracle, x0, nu, sigma, zeta, lambda, ...
     fis = oracle(xhat_1);
     xs = [];
     
+    ms = m_1;
+    
     i = 1;
     while(~solution_found)
         i = i + 1;
@@ -40,6 +43,11 @@ function [x, xs] = drecexpbary(oracle, x0, nu, sigma, zeta, lambda, ...
         fis = [fis; oracle(xhat)];
         m_1 = m;
         deltax_1 = xhat - xhat_1;
-        xhat_1 = xhat;    
+        xhat_1 = xhat;
+        
+        ms = [ms; m];
     end
+    
+    xs = [x0; xs];
+    x = xs(end, :);
 end

@@ -3,50 +3,49 @@ clear all
 clc
 
 % Method hyperparameter
-nu = 2;
-iterations = 10000;
+nu = 1;
+iterations = 1000;
 
-sigma = 0.2;
-zeta = 0.01;
+sigma = 1;
+zeta = 0;
 lambda = 1;
 
 % Save folder
 path = [pwd '/images/'];
-fname = 'discrete';
 
-a = -10;
-b = 10;
-n = 100;
+a = -1;
+b = 1;
+n = 1000;
+
+oracle = @(x) sum(x.^2);
 
 % Batch version
 x01 = uniform(a, b, [n, 2]);
 x1 = expbary(oracle, x01, nu);
 
 % Recursive version
-oracle = @(x) sum(x.^2);
-x02 = [10, 10];
-[x2, xs] = drecexpbary(oracle, x02, nu, ...
-                      sigma, zeta, lambda, ...
-                      iterations);
+x02 = [1, 1];
+[ms, x2, xs] = drecexpbary(oracle, x02, nu, sigma, zeta, lambda, ...
+                           iterations);
 
-x = linspace(-10, 10);
-y = linspace(-10, 10);
+x = linspace(-1, 1);
+y = linspace(-1, 1);
 [X,Y] = meshgrid(x,y);
 Z = X.^2 + Y.^2;
 
-hfig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+% Recursive version
+hfig_recursive = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 contour(X, Y, Z)
 hold on;
-plot(x01(:, 1), x01(:, 2), '*');
-hold on
-plot(x1(1), x1(2), 'x');
-hold on
-plot(xs(:, 1), xs(:, 2));
+plot(x2(1), x2(2), 'x');
 hold on
 plot(xs(:, 1), xs(:, 2), 'o');
+hold on
+plot(xs(:, 1), xs(:, 2), '-');
 hold off
 
-titletxt = sprintf(['$n$ = ', num2str(iterations), ', ', ...
+titletxt = sprintf(['Recursive barycenter method - $n$ = ', ...
+                     num2str(iterations), ', ', ...
                     '$\\nu$ = ', num2str(nu), ', ', ...
                     '$\\sigma$ = ', num2str(sigma), ', ', ...
                     '$\\xi$ = ', num2str(zeta), ', ', ...
@@ -58,5 +57,66 @@ xlabel('x', 'interpreter', 'latex');
 ylabel('y', 'interpreter', 'latex');
 
 axis square
+axis([-1, 1, -1, 1])
 
-saveas(hfig, [path, fname], 'epsc')
+opt_msg = ['\leftarrow ' sprintf('(%.3f, %.3f)', x2(1), x2(2))];
+text(x2(1), x2(2), opt_msg, 'FontSize', 15);
+
+% Batched version
+hfig_batch = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+
+plot(x01(:, 1), x01(:, 2), '*');
+hold on
+plot(x1(1), x1(2), 'x');
+hold on
+
+titletxt = sprintf(['Batched barycenter method - $n$ = ', ...
+                     num2str(iterations), ', ', '$\\nu$ = ', ...
+                     num2str(nu)], sigma, zeta, lambda);
+htitle = title(titletxt); 
+htitle.Interpreter = 'latex';
+xlabel('x', 'interpreter', 'latex');
+ylabel('y', 'interpreter', 'latex');
+
+opt_msg = ['\leftarrow ' sprintf('(%.3f, %.3f)', x1(1), x1(2))];
+text(x1(1), x1(2), opt_msg, 'FontSize', 15);
+
+axis square
+axis([-1, 1, -1, 1])
+
+% Mass term
+hfig_mval = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+
+plot(ms);
+
+titletxt = sprintf(['Mass term $m_n$ - $n$ = ', ...
+                     num2str(iterations), ', ', '$\\nu$ = ', ...
+                     num2str(nu)], sigma, zeta, lambda);
+htitle = title(titletxt);
+htitle.Interpreter = 'latex';
+xlabel('Iterações', 'interpreter', 'latex');
+ylabel('$m_n$', 'interpreter', 'latex');
+
+axis square
+
+fname_batch = ['discrete_batch', ...
+               '_nu', num2str(nu, '%.0e')];
+
+saveas(hfig_batch, [path, fname_batch], 'epsc');
+           
+fname_recursive = ['discrete_recursive', ...
+                   '_nu', num2str(nu, '%.0e'), ...
+                   '_sigma', num2str(sigma, '%.0e'), ...
+                   '_lambda', num2str(lambda, '%.0e')];
+
+saveas(hfig_recursive, [path, fname_recursive], 'epsc');
+
+fname_m = ['discrete_recursive_m', ...
+           '_nu', num2str(nu, '%.0e'), ...
+           '_sigma', num2str(sigma, '%.0e'), ...
+           '_lambda', num2str(lambda, '%.0e')];
+
+saveas(hfig_mval, [path, fname_m], 'epsc');
+
+
+
