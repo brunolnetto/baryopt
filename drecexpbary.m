@@ -36,7 +36,6 @@ function [ms, x, xs] = drecexpbary(oracle, x0, ...
         m = lambda*m_1 + e_i;
         xhat = (1/m)*(lambda*m_1*xhat_1 + x*e_i);
         
-        xs = [xs; xhat];
         solution_found = i >= iterations;
         
         % Updates
@@ -44,7 +43,8 @@ function [ms, x, xs] = drecexpbary(oracle, x0, ...
         m_1 = m;
         deltax_1 = xhat - xhat_1;
         xhat_1 = xhat;
-        
+    
+        xs = [xs; xhat];
         ms = [ms; m];
     end
     

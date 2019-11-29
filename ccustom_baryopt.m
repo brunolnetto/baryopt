@@ -11,10 +11,10 @@ axis_span = 2;
 nu = 1;
 zeta = -2;
 omega = 1;
-lambda = 1.001;
+lambda = -10;
 
 % Time integral
-time = 0:0.0001:10000;
+time = 0:0.001:100;
 
 % Recursive version
 oracle = @(x) sum(x.^2);
