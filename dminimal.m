@@ -6,8 +6,11 @@ clc
 nu = 1;
 iterations = 100;
 
+init_val = 1;
+axis_span = 2;
+
 sigma = 1;
-zeta = 0.5;
+zeta = 0;
 lambda = 1;
 
 % Save folder
@@ -28,10 +31,19 @@ x02 = [1, 1];
 [ms, x2, xs] = drecexpbary(oracle, x02, nu, sigma, zeta, lambda, ...
                            iterations);
 
-x = linspace(-1, 1);
-y = linspace(-1, 1);
-[X,Y] = meshgrid(x,y);
-Z = X.^2 + Y.^2;
+a = -axis_span;
+b = axis_span;
+n = 100;
+
+x_ = linspace(-axis_span, axis_span, n);
+y_ = linspace(-axis_span, axis_span, n);
+[X,Y] = meshgrid(x_, y_);
+
+for i = 1:length(x_)
+    for j = 1:length(y_)
+        Z(i, j) = oracle([x_(i), y_(j)]);
+    end
+end
 
 % Recursive version
 hfig_recursive = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
