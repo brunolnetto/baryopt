@@ -1,5 +1,5 @@
-function [x, xs] = crecexpbary(oracle, m0, x0, nu, Sigma, ...
-                               lambda, zeta, tspan)
+function [x, xs] = crecexpbary_custom(oracle, m0, x0, nu, lambda, ...
+                                      curiosity_fun, tspan)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
 % In:
@@ -12,7 +12,7 @@ function [x, xs] = crecexpbary(oracle, m0, x0, nu, Sigma, ...
 % Out:
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
-    baryfunc = @(t, x) baryopt(t, x, oracle, nu, Sigma, lambda, zeta);
+    baryfunc = @(t, x) baryopt(t, x, oracle, nu, lambda, curiosity_fun);
     
     x0 = [m0; x0];
     
@@ -26,7 +26,7 @@ function [x, xs] = crecexpbary(oracle, m0, x0, nu, Sigma, ...
     x = xs(end, :);
 end
 
-function dx = baryopt(t, x, oracle, nu, Sigma, lambda, zeta)
+function dx = baryopt(t, x, oracle, nu, lambda, curiosity_fun)
     persistent ei_s z_s xhats ms;
     
     if(isempty(ei_s))
@@ -39,10 +39,7 @@ function dx = baryopt(t, x, oracle, nu, Sigma, lambda, zeta)
     m  = x(1);
     xhat = x(2:end);
     
-    zhat = exp(-nu*xhat);
-    z = normrnd(zhat, Sigma);
-    
-    x = xhat + z;
+    x = xhat + curiosity_fun(t, xhat);
     e_i = exp(-nu*oracle(x));
     
     dm = (lambda^t)*e_i;
@@ -52,12 +49,10 @@ function dx = baryopt(t, x, oracle, nu, Sigma, lambda, zeta)
     dx = [dm; dxhat];
     
     ei_s = [ei_s; e_i];
-    z_s = [z_s; z];
     xhats = [xhats, xhat];
     ms = [ms; m];
     
     assignin('base', 'exps', ei_s)
-    assignin('base', 'z_s', z_s)
     assignin('base', 'xhats', xhats)
     assignin('base', 'ms', ms)
 end

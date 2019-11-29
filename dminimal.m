@@ -4,10 +4,10 @@ clc
 
 % Method hyperparameter
 nu = 1;
-iterations = 1000;
+iterations = 100;
 
 sigma = 1;
-zeta = 0;
+zeta = 0.5;
 lambda = 1;
 
 % Save folder
