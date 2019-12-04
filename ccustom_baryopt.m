@@ -9,19 +9,20 @@ axis_span = 2;
 
 % Method hyperparameter
 nu = 1;
-zeta = -2;
+sigma = 1;
 omega = 1;
-lambda = -10;
+lambda = 0;
 
 % Time integral
-time = 0:0.001:100;
+time = 0:0.001:10;
 
 % Recursive version
-oracle = @(x) sum(x.^2);
+% oracle = @(x) sum(x.^2);
+oracle = @(x) (x(2))^2;
 m0 = 1;
 x0 = init_val*ones(n, 1);
 
-curious_fun = @(t, xhat) curiosity_fun(t, xhat, zeta);
+curious_fun = @(t, xhat) curiosity_fun(t, xhat, sigma);
 [x, xs] = crecexpbary_custom(oracle, m0, x0, nu, lambda, ...
                              curious_fun, time);
 
@@ -50,7 +51,7 @@ hold off
 axis square
 
 titletxt = sprintf(['$\\nu$ = ', num2str(nu), ', ', ...
-                    '$\\zeta$ = ', num2str(zeta'), ', ', ...
+                    '$\\sigma$ = ', num2str(sigma'), ', ', ...
                     '$\\lambda$ = ', num2str(lambda)]);
 htitle = title(titletxt);
 htitle.Interpreter = 'latex';
@@ -58,13 +59,13 @@ xlabel('x', 'interpreter', 'latex');
 ylabel('y', 'interpreter', 'latex');
 
 axis square
-opt_msg = ['\leftarrow ' sprintf('(%.3f, %.3f)', x(1), x(2))];
+opt_msg = ['  \leftarrow ' sprintf('(%.2f, %.2f)', x(1), x(2))];
 text(x(1), x(2), opt_msg, 'FontSize', 15);
 
 % Save folder
 path = [pwd '/images/'];
 fname = ['continuous_nu', num2str(nu, '%.0e'), ...
-         '_zeta', num2str(zeta, '%.0e'), ...
+         '_sigma', num2str(sigma, '%.0e'), ...
          '_lambda', num2str(lambda, '%.0e')];
 
 saveas(hfig, [path, fname], 'epsc')
