@@ -39,10 +39,10 @@ function dx = baryopt(t, x, oracle, nu, lambda, curiosity_fun)
     m  = x(1);
     xhat = x(2:end);
     
-    x = xhat + curiosity_fun(t, xhat);
+    x = xhat + curiosity_fun(t, xhat, m);
     e_i = exp(-nu*oracle(x));
     
-    dm = (lambda^t)*e_i;
+    dm = exp(-lambda^t)*e_i;
     
     dxhat = (1/m)*(x - xhat*exp(-lambda^t))*e_i;
 

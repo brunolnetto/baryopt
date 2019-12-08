@@ -8,21 +8,22 @@ init_val = 1;
 axis_span = 2;
 
 % Method hyperparameter
-nu = 1;
-sigma = 1;
-omega = 1;
-lambda = 0;
+    nu = 5;
+    sigma = 1;
+    lambda = 0;
+    zeta = 0;
 
 % Time integral
-time = 0:0.001:10;
+time = 0:0.01:1000;
 
 % Recursive version
 % oracle = @(x) sum(x.^2);
-oracle = @(x) (x(2))^2;
+oracle = @(x) norm(x);
 m0 = 1;
 x0 = init_val*ones(n, 1);
 
-curious_fun = @(t, xhat) curiosity_fun(t, xhat, sigma);
+curious_fun = @(t, xhat, m) curiosity_fun(t, xhat, m, oracle, ...
+                                          nu, sigma, zeta);
 [x, xs] = crecexpbary_custom(oracle, m0, x0, nu, lambda, ...
                              curious_fun, time);
 
