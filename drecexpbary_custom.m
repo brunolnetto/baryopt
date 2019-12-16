@@ -1,5 +1,5 @@
-function [x, xs] = drecexpbary_custom(oracle, m0, x0, nu, lambda, ...
-                                      curiosity_fun, iterations)
+function [x, xs] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
+                                      lambda, iterations)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
 % In:
@@ -23,7 +23,10 @@ function [x, xs] = drecexpbary_custom(oracle, m0, x0, nu, lambda, ...
     
     i = 1;
     while(~solution_found)
-       x = xhat_1 + curiosity_fun(i, xhat_1);
+       z0 = zeros(size(xhat_1));
+       z = normrnd(z0, sigma);
+       
+       x = xhat_1 + z;
        e_i = exp(-nu*oracle(x));
        m = lambda*m_1 + e_i;
        xhat = (1/m)*(lambda*m_1*xhat_1 + x*e_i);

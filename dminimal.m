@@ -20,7 +20,7 @@ a = -1;
 b = 1;
 n = 1000;
 
-oracle = @(x) sum(x.^2);
+oracle = @(x) (x(1)^2 - x(2))^2 + (x(1)^2 - 1)^2;
 
 % Batch version
 x01 = uniform(a, b, [n, 2]);

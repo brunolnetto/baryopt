@@ -1,4 +1,4 @@
-function xhat = expbary(oracle, x, nu)
+function [xhat, Si] = expbary(oracle, x, nu)
 % Batch barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
 % In:

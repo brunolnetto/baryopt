@@ -16,10 +16,10 @@ function [x, xs] = crecexpbary_custom(oracle, m0, x0, nu, lambda, ...
     
     x0 = [m0; x0];
     
-    xhat = ode45(baryfunc, tspan, x0);
+    xhat = my_ode45(baryfunc, tspan, x0);
     
     % Accumulated values
-    xs = xhat.y(2:end, :);
+    xs = xhat(2:end, :);
     xs = xs';
     
     % End value
