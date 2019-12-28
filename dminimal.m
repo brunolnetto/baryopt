@@ -4,7 +4,7 @@ clc
 
 % Method hyperparameter
 nu = 1;
-iterations = 100;
+iterations = 50;
 
 init_val = 1;
 axis_span = 2;
@@ -20,7 +20,7 @@ a = -1;
 b = 1;
 n = 1000;
 
-oracle = @(x) (x(1)^2 - x(2))^2 + (x(1)^2 - 1)^2;
+oracle = @(x) x(1)^2 + x(2)^2;
 
 % Batch version
 x01 = uniform(a, b, [n, 2]);
@@ -41,7 +41,7 @@ y_ = linspace(-axis_span, axis_span, n);
 
 for i = 1:length(x_)
     for j = 1:length(y_)
-        Z(i, j) = oracle([x_(i), y_(j)]);
+        Z(i, j) = oracle([X(i, j), Y(i, j)]);
     end
 end
 
