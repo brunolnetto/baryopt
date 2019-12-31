@@ -1,4 +1,4 @@
-function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
+function [x, xs, m] = d2recexpbary_custom(oracle, m0, x0, nu, sigma, ...
                                          lambda, iterations)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
@@ -12,7 +12,9 @@ function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
 % Out:
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
-        
+    
+    oracle = @(x) dsecond_order_fun(x, oracle);
+
     % Initialization    
     xhat_2 = x0;
     m_2 = m0;    
@@ -28,6 +30,7 @@ function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
     % Previous value of function
     z_1 = normrnd(z_bar_1, sigma);
     x_1 = xhat_2 + z_1;
+    
     f_1 = oracle(x_1);
     e_1 = exp(-nu*f_1);
     
@@ -44,7 +47,7 @@ function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
     i = 1;
     while(~solution_found)
        % Calculation of mean for stochastic function
-       z_bar = (1/m_1)*(-exp(-nu*f_1)*delta_x_1 + z_bar_1*m_2);
+       z_bar = (1/m_1)*(exp(-nu*f_1)*delta_x_1 + z_bar_1*m_2);
        z = normrnd(z_bar, sigma);
         
        % Current value of positoin

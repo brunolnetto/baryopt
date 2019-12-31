@@ -7,7 +7,7 @@ n = 2;
 init_val = 1;
 
 % Method hyperparameter
-nu = 0.5;
+nu = 0.01;
 sigma = 1;
 lambda = 1;
 
@@ -16,14 +16,11 @@ iterations = 1000;
 
 % Recursive version
 oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
-% oracle = @(x) 3*(1-x(1)).^2.*exp(-(x(1)^2) - (x(2)+1).^2) ... 
-%               - 10*(x(1)/5 - x(1).^3 - x(2).^5).*exp(-x(1).^2-x(2).^2) ... 
-%               - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
-
+m0 = 1;
 x0 = init_val*ones(n, 1);
-m0 = exp(-nu*oracle(x0));
 
-[x, xs] = drecexpbary_custom(oracle, m0, x0, nu, sigma, lambda, iterations);
+[x, xs] = d2recexpbary_custom(oracle, m0, x0, ...
+                              nu, sigma, lambda, iterations);
 
 axis_span = 5;
 

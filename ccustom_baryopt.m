@@ -7,12 +7,12 @@ n = 2;
 init_val = 0;
 
 % Method hyperparameter
-nu = 10;
+nu = 1;
 sigma = 1;
 lambda = 0;
 
 % Time integral
-time = 0:0.1:1000;
+time = 0:0.01:40;
 
 % Recursive version
 oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
@@ -24,7 +24,7 @@ x0 = init_val*ones(n, 1);
 zbar_0 = zeros(size(x0));
 
 [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
-                             nu, lambda, sigma, time);
+                                 nu, lambda, sigma, time);
 
 axis_span = 2;
                          
@@ -102,6 +102,14 @@ htitle.Interpreter = 'latex';
 xlabel('t [s]', 'interpreter', 'latex');
 ylabel('', 'interpreter', 'latex');
 
+hfig_m = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+plot(time(1, 1:end-1), ms);
+
+titletxt = 'Accumulated mass ';
+htitle = title(titletxt);
+htitle.Interpreter = 'latex';
+xlabel('t [s]', 'interpreter', 'latex');
+ylabel('', 'interpreter', 'latex');
 
 % Save folder
 path = [pwd '/images/'];
@@ -130,3 +138,8 @@ path = [pwd '/images/'];
 fname = 'barycenter2';
 
 saveas(hfig_x2, [path, fname], 'epsc')
+
+path = [pwd '/images/'];
+fname = 'mass';
+
+saveas(hfig_m, [path, fname], 'epsc')
