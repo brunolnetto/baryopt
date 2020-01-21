@@ -1,5 +1,6 @@
 function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
-                                          nu, lambda, sigma, tspan)
+                                          nu, lambda, lambda_z, ...
+                                          sigma, tspan)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
 % In:
@@ -12,7 +13,7 @@ function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
 % Out:
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
-    baryfunc = @(t, x) baryopt(t, x, oracle, nu, lambda, sigma);
+    baryfunc = @(t, x) baryopt(t, x, oracle, nu, lambda, lambda_z, sigma);
     
     if(m0 == 0)
         error('m0 MUST be different from 0!');
@@ -34,7 +35,7 @@ function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
     x = xs(end, :);
 end
 
-function dx = baryopt(t, x, oracle, nu, lambda, sigma)
+function dx = baryopt(t, x, oracle, nu, lambda, lambda_z, sigma)
     persistent xhats e_s ms counter;
     
     if(isempty(counter))
@@ -50,12 +51,13 @@ function dx = baryopt(t, x, oracle, nu, lambda, sigma)
     xhat = x(2:2+n);
     zbar = x(3+n:end);
     
+    zbar
     x = normrnd(zbar, sigma);
     e_i = exp(-nu*oracle(x));
     
     dm = exp(-lambda^t)*e_i;
     dxhat = (1/m)*(x - xhat*exp(-lambda^t))*e_i;
-    dzbar = (dxhat - zbar)*e_i/m;
+    dzbar = (dxhat - zbar)*exp(-lambda_z^t)*e_i/m;
     
     dx = [dm; dxhat; dzbar];
     
