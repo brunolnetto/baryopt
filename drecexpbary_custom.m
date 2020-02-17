@@ -1,5 +1,6 @@
 function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
-                                         lambda, iterations)
+                                         lambda, lambda_z, iterations, ...
+                                         is_accel)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
 % In:
@@ -13,28 +14,13 @@ function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
         
-    % Initialization    
-    xhat_2 = x0;
-    m_2 = m0;    
-    z_bar_2 = zeros(size(x0));
-    
-    delta_x_2 = zeros(size(x0));
+    % Mass components
+    m_2 = 0;
+    m_1 = m0;
+    xhat_1 = x0;
+    delta_x_1 = zeros(size(x0));
     z_bar_1 = zeros(size(x0));
-    
-    z_2 = normrnd(z_bar_2, sigma);
-    x_2 = xhat_2 + z_2;
-    f_2 = oracle(x_2);
-    
-    % Previous value of function
-    z_1 = normrnd(z_bar_1, sigma);
-    x_1 = xhat_2 + z_1;
-    f_1 = oracle(x_1);
-    e_1 = exp(-nu*f_1);
-    
-    % Mass components    
-    m_1 = m_2 + e_1;    
-    xhat_1 = (1/m_1)*(lambda*m_2*xhat_2 + x_1*e_1);
-    delta_x_1 = xhat_1 - xhat_2;
+    f_1 = oracle(x0);
     
     xs = [];
     ms = [];
@@ -42,10 +28,22 @@ function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
     solution_found = false;
     
     i = 1;
+    zbars = [];
     while(~solution_found)
        % Calculation of mean for stochastic function
-       z_bar = (1/m_1)*(-exp(-nu*f_1)*delta_x_1 + z_bar_1*m_2);
-       z = normrnd(z_bar, sigma);
+       e_z = exp(-nu*f_1);
+       
+       if(is_accel)
+           z_bar = (1/m_1)*(-lambda_z*e_z*delta_x_1 + z_bar_1*m_2);
+       else
+           z_bar = zeros(size(delta_x_1));
+       end
+       
+       z_bar = vpa(z_bar);
+       zbars = [zbars; z_bar'];
+       assignin('base', 'zbars', zbars);
+       
+       z = normrnd(double(z_bar), double(sigma));
         
        % Current value of positoin
        x = xhat_1 + z;
@@ -60,7 +58,7 @@ function [x, xs, m] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
        solution_found = i >= iterations;
        
        % Previous elements
-       deltax_1 = xhat - xhat_1;
+       delta_x_1 = xhat - xhat_1;
        
        % Updates
        m_2 = m_1;

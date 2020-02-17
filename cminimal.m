@@ -7,19 +7,19 @@ n = 2;
 init_val = 0;
 
 % Method hyperparameter
-nu = 10;
+nu = 1;
 sigma = 1;
 lambda = 0;
-lambda_z = 0;
+lambda_z = 0.1;
 
 % Time integral
 time = 0:0.1:1500;
 
 % Recursive version
-oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
-% oracle = @(x) 3*(1-x(1)).^2.*exp(-(x(1)^2) - (x(2)+1).^2) ... 
-%               - 10*(x(1)/5 - x(1).^3 - x(2).^5).*exp(-x(1).^2-x(2).^2) ... 
-%               - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
+%oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
+oracle = @(x) 3*(1-x(1)).^2.*exp(-(x(1)^2) - (x(2)+1).^2) ... 
+              - 10*(x(1)/5 - x(1).^3 - x(2).^5).*exp(-x(1).^2-x(2).^2) ... 
+              - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
 m0 = 1;
 x0 = init_val*ones(n, 1);
 zbar_0 = zeros(size(x0));

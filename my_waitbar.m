@@ -3,7 +3,7 @@ classdef my_waitbar
         idx = tic;
         waitbar_id = 0;
         
-        time_mask = '%3.0f %% - %.4f [%%/s] [%s - %s]';
+        time_mask = '%s %% - %s [%%/s] [%s - %s]';
         msg = '';
         name = '';
         
@@ -114,11 +114,41 @@ classdef my_waitbar
             
             else
                 obj.speed = perc/obj.t_real;
-                t_f = 100/obj.speed;
+                t_f = floor((100/obj.speed)*100)/100;
             end
             
+            perc = num2str(floor(perc*100)/100);
+            parts = strsplit(perc, '.');
+            
+            if(length(parts) == 1)
+                part2 = '00';
+            else
+                part2 = parts{2};
+                part2 = terop(length(part2)==2, part2, [part2, '0']);
+            end
+            
+            perc = [parts{1}, '.', part2];
+            
+            speed = obj.speed;
+            [a, b] = dec2expnot(speed);
+            a = floor(a*100)/100;
+            a = num2str(floor(a*100)/100);
+            
+            parts = strsplit(a, '.');
+            
+            if(length(parts) == 1)
+                part2 = '00';
+            else
+                part2 = parts{2};
+                part2 = terop(length(part2)==2, part2, [part2, '0']);
+                
+            end
+            
+            a = str2num([parts{1}, '.', part2]);
+            speed_new = num2str(a*10^b);
+            
             obj.t_end_str = datestr(seconds(t_f), 'HH:MM:SS');
-            obj.msg = sprintf(obj.time_mask, perc, obj.speed, ...
+            obj.msg = sprintf(obj.time_mask, perc, speed_new, ...
                               obj.t_curr_str, obj.t_end_str);
             
              % Uncomment this block if you wish to plot speed and time consuming

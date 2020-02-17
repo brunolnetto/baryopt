@@ -20,13 +20,13 @@ function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
     end
     
     n = length(x0);
-    x0 = [m0; x0; zbar_0];
+    x0 = [m0; m0; x0; zbar_0];
     
     xhat = my_ode45(baryfunc, tspan, x0);
     
     % Accumulated values
-    xs = xhat(2:1+n, :);
-    zs = xhat(2+n:end, :);
+    xs = xhat(3:2+n, :);
+    zs = xhat(3+n:end, :);
     
     xs = xs';
     zs = zs';
@@ -41,25 +41,26 @@ function dx = baryopt(t, x, oracle, nu, lambda, lambda_z, sigma)
     if(isempty(counter))
         counter = 0;
         xhats = [];
-        ms = [];
-        
+        ms = [];        
     end
         
-    n = length((length(x)-1)/2);
-    
+    n = (length(x)-2)/2;
     m  = x(1);
-    xhat = x(2:2+n);
-    zbar = x(3+n:end);
-    
-    zbar
+    m_z  = x(2);
+    xhat = x(3:2+n);
+    % zbar = x(3+n:end);
+    zbar = zeros(size(xhat));
+        
     x = normrnd(zbar, sigma);
     e_i = exp(-nu*oracle(x));
     
     dm = exp(-lambda^t)*e_i;
-    dxhat = (1/m)*(x - xhat*exp(-lambda^t))*e_i;
-    dzbar = (dxhat - zbar)*exp(-lambda_z^t)*e_i/m;
+    dm_z = exp(-lambda_z^t)*e_i;
+    dxhat = (1/m)*(x - xhat)*e_i;
+    % dzbar = (1/m_z)*(dxhat - zbar)*exp(-lambda_z^t)*e_i;
+    dzbar = zeros(size(xhat));
     
-    dx = [dm; dxhat; dzbar];
+    dx = [dm; dm_z; dxhat; dzbar];
     
     counter = counter + 1;
     
