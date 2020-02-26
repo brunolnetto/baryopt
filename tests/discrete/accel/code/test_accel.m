@@ -12,13 +12,12 @@ sigma = 0.5;
 lambda = 1;
 
 % Recursive version
+syms x y
 x_0 = 1;
 y_0 = -1;
 oracle = @(x) (x(1) - x_0)^2 + (x(2) - y_0)^2;
+func = (x - x_0)^2 + (y - y_0)^2;
 
-syms x y
-func = (x - 1)^2 + (y + 1)^2;
-oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 % syms x y
 % func = 3*(1-x).^2.*exp(-(x^2) - (y+1)^2) ... 
 %               - 10*(x/5 - x.^3 - y^5).*exp(-x^2-y^2) ... 
@@ -37,13 +36,13 @@ n_iterations = 1000;
 x_test = {};
 
 wb = my_waitbar('Calculating minimum...');
-is_accels = [true];
+is_accels = [false];
 
 for is_accel = is_accels
     if(~is_accel)
         lambda_z = 0;
     else
-        lambda_z = 0.9;
+        lambda_z = 0.5;
     end
     
     zbars_total = zeros(iterations, 2);

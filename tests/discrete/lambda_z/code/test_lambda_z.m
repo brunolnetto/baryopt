@@ -8,15 +8,15 @@ init_val = 0;
 
 % Method hyperparameter
 nu = 5;
-sigma = 0.5;
+sigma = 1;
 lambda = 1;
 
 % Recursive version
+syms x y
+
 x_0 = 1;
 y_0 = -1;
-oracle = @(x) (x(1) - x_0)^2 + (x(2) - y_0)^2;
 
-syms x y
 func = (x - x_0)^2 + (y - y_0)^2;
 oracle = @(x) (x(1) - x_0)^2 + (x(2) - y_0)^2;
 

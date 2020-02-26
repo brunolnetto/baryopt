@@ -1,4 +1,4 @@
-function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
+function [x, xs, zs, ms] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
                                           nu, lambda, lambda_z, ...
                                           sigma, tspan)
 % Recursive barycenter algorithm for direct optimization
@@ -13,7 +13,9 @@ function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
 % Out:
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
-    baryfunc = @(t, x) baryopt(t, x, oracle, nu, lambda, lambda_z, sigma);
+    degree = 8;
+    baryfunc = @(t, x) baryopt(t, x, oracle, ...
+                               nu, lambda, lambda_z, sigma, degree);
     
     if(m0 == 0)
         error('m0 MUST be different from 0!');
@@ -22,11 +24,12 @@ function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
     n = length(x0);
     x0 = [m0; m0; x0; zbar_0];
     
-    xhat = my_ode45(baryfunc, tspan, x0);
+    [tspan, sol] = ode(degree, baryfunc, x0, tspan);
     
     % Accumulated values
-    xs = xhat(3:2+n, :);
-    zs = xhat(3+n:end, :);
+    ms = sol(1, :);
+    xs = sol(3:2+n, :);
+    zs = sol(3+n:end, :);
     
     xs = xs';
     zs = zs';
@@ -35,44 +38,44 @@ function [x, xs, zs] = crecexpbary_custom(oracle, m0, x0, zbar_0, ...
     x = xs(end, :);
 end
 
-function dx = baryopt(t, x, oracle, nu, lambda, lambda_z, sigma)
-    persistent xhats e_s ms counter;
+function dx = baryopt(t, x, oracle, nu, lambda, lambda_z, sigma, degree)
+    persistent counter t_hat dxhats;
     
     if(isempty(counter))
         counter = 0;
-        xhats = [];
-        ms = [];        
+        t_hat = [];
+        dxhats = [];
     end
-        
+    
     n = (length(x)-2)/2;
     m  = x(1);
     m_z  = x(2);
+    
     xhat = x(3:2+n);
-    % zbar = x(3+n:end);
     zbar = zeros(size(xhat));
         
-    x = normrnd(zbar, sigma);
+    z = normrnd(zbar, sigma);
+    x = xhat + z;
+    
     e_i = exp(-nu*oracle(x));
     
     dm = exp(-lambda^t)*e_i;
     dm_z = exp(-lambda_z^t)*e_i;
+    
     dxhat = (1/m)*(x - xhat)*e_i;
-    % dzbar = (1/m_z)*(dxhat - zbar)*exp(-lambda_z^t)*e_i;
-    dzbar = zeros(size(xhat));
+    dzbar = (1/m_z)*(dxhat - zbar)*exp(-lambda_z^t)*e_i;
     
     dx = [dm; dm_z; dxhat; dzbar];
-    
+
     counter = counter + 1;
-    
     if(counter == 1)
-        xhats = [xhats, xhat];
-        ms = [ms; m];
-        e_s = [e_s; e_i];
-                
-        assignin('base', 'xhats', xhats);
-        assignin('base', 'ms', ms);
-        assignin('base', 'e_s', e_s);
-    elseif(counter == 4)
+        dxhats = [dxhats, dx];
+        t_hat = [t_hat, t];
+        assignin('base', 'dxhats', dxhats);
+        assignin('base', 't_hat', t_hat);
+    end
+
+    if(counter == degree)
         counter = 0;
     end
 end

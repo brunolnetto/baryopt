@@ -6,52 +6,52 @@ n = 2;
 
 init_val = 0;
 
-% Method hyperparameter
-nu = 5;
-sigma = 0.5;
-lambda = 1;
-lambda_z = 0.5;
-
 % Time integral
-iterations = 200;
+iterations = 50;
 
 % Recursive version
 oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 
-% syms x y
-% func = (x - 1)^2 + (y + 1)^2;
-% oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 syms x y
-func = 3*(1-x).^2.*exp(-(x^2) - (y+1)^2) ... 
-              - 10*(x/5 - x.^3 - y^5).*exp(-x^2-y^2) ... 
-              - 1/3*exp(-(x+1)^2 - y^2);
+func = (x - 1)^2 + (y + 1)^2;
+oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 
-oracle = @(x) 3*(1-x(1)).^2.*exp(-(x(1)^2) - (x(2)+1).^2) ... 
-              - 10*(x(1)/5 - x(1).^3 - x(2).^5).*exp(-x(1).^2-x(2).^2) ... 
-              - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
+% syms x y
+% func = 3*(1-x).^2.*exp(-(x^2) - (y+1)^2) ... 
+%        - 10*(x/5 - x.^3 - y^5).*exp(-x^2-y^2) ... 
+%        - 1/3*exp(-(x+1)^2 - y^2);
+% 
+% oracle = @(x) 3*(1-x(1)).^2.*exp(-(x(1)^2) - (x(2)+1).^2) ... 
+%               - 10*(x(1)/5 - x(1).^3 - x(2).^5).*exp(-x(1).^2-x(2).^2) ... 
+%               - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
 
 x0 = init_val*ones(n, 1);
-m0 = exp(-nu*oracle(x0));
+m0 = 0;
 
-n_iterations = 2000;
+n_iterations = 50;
 
-for nu = [1 3.3 10]
-    for sigma = [0.1 1]
-        for lambda = [0.9 1]
+nus = [1 5 10];
+sigmas = [0.1 1];
+lambdas = [0.9 1];
+
+for nu = nus
+    for sigma = sigmas
+        for lambda = lambdas
             x_test = [];
 
             wb = my_waitbar('Calculating minimum...');
 
             for i = 1:n_iterations
-                [x, xs] = drecexpbary_custom(oracle, m0, x0, ...
-                                             nu, sigma, lambda, ...
-                                             lambda_z, iterations);
+                [x, xs, m, deltas, zbars] = ...
+                    drecexpbary_custom(oracle, m0, x0, ...
+                                       nu, sigma, lambda, ...
+                                       0, iterations, false);
                 x_test = [x_test, x];
 
                 wb.update_waitbar(i, n_iterations);
             end
 
-            axis_span = 2.5;
+            axis_span = 3.5;
 
             a = -axis_span;
             b = axis_span;
@@ -84,6 +84,10 @@ for nu = [1 3.3 10]
             hold on
             props = quiver(xs(:, 1), xs(:, 2), u, v, 'AutoScale','off');
             props.LineWidth = 2;
+            hold on
+            plot(xs(end, 1), xs(end, 2), ...
+                 '-p', 'MarkerFaceColor','red',...
+                 'MarkerSize',15);
             hold off
 
             axis square

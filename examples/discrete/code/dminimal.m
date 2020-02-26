@@ -8,9 +8,9 @@ init_val = 0;
 
 % Method hyperparameter
 nu = 5;
-sigma = 0.5;
+sigma = 1;
 lambda = 1;
-lambda_z = 1;
+lambda_z = 0;
 
 % Recursive version
 oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
@@ -39,16 +39,17 @@ is_accel = false;
 
 x_tests = {};
 for i = 1:n_iterations
-    [x, xs] = drecexpbary_custom(oracle, m0, x0, ...
-                                 nu, sigma, lambda, ...
-                                 lambda_z, iterations, ...
-                                 is_accel);
+    [x, xs, m, ...
+     deltas, zbars] = drecexpbary_custom(oracle, m0, x0, ...
+                                         nu, sigma, lambda, ...
+                                         lambda_z, iterations, ...
+                                         is_accel);
     x_tests{end+1} = xs;
     
     wb.update_waitbar(i, n_iterations);
 end
 
-axis_span = 2.5;
+axis_span = 1.5;
 
 a = -axis_span;
 b = axis_span;
