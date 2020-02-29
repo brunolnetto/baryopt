@@ -8,7 +8,7 @@ init_val = 0;
 
 % Method hyperparameter
 nu = 5;
-sigma = 1;
+sigma = 0.2;
 lambda = 1;
 lambda_z = 0;
 
@@ -31,19 +31,25 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 x0 = init_val*ones(n, 1);
 m0 = exp(-nu*oracle(x0));
 
-iterations = 20;
-n_iterations = 500;
+iterations = 200;
+n_iterations = 200;
 
 wb = my_waitbar('Calculating minimum...');
 is_accel = false;
 
+% accel_fun = @(m_1, xhat, delta_xhat_1) ...
+%                     integrated_accel(m_1, xhat, ...
+%                                      delta_xhat_1, lambda_z, ... 
+%                                      nu, oracle);
+
+accel_fun = @(m_1, xhat, delta_xhat_1) non_accel(m_1, xhat, delta_xhat_1);
+
+
 x_tests = {};
 for i = 1:n_iterations
     [x, xs, m, ...
-     deltas, zbars] = drecexpbary_custom(oracle, m0, x0, ...
-                                         nu, sigma, lambda, ...
-                                         lambda_z, iterations, ...
-                                         is_accel);
+     deltas, zbars] = drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
+                                         lambda, iterations, accel_fun);
     x_tests{end+1} = xs;
     
     wb.update_waitbar(i, n_iterations);
@@ -72,13 +78,13 @@ hfig = my_figure();
 contourf(X, Y, Z)
 hold on;
 
-x_mean = zeros(1, 2);
+x_star = zeros(1, 2);
 for i = 1:length(x_tests)
     x = x_tests{i};
-    x_mean = x_mean + x(end, :);
+    x_star = x_star + x(end, :);
 end
 
-x_mean = x_mean/n_iterations;
+x_star = x_star/n_iterations;
 
 for i = 1:length(x_tests)
     xs = x_tests{i};
@@ -86,15 +92,15 @@ for i = 1:length(x_tests)
     hold on;
 end
 
-x_ = zeros(size(x_tests{1}));
+x_mean = zeros(size(x_tests{1}));
 for i = 1:length(x_tests)
-    x_ = x_ + x_tests{i};
+    x_mean = x_mean + x_tests{i};
 end
 
-x_ = x_/n_iterations;
+x_mean = x_mean/n_iterations;
 
-curr = x_(2:end, :); 
-prev = x_(1:end-1, :);
+curr = x_mean(2:end, :); 
+prev = x_mean(1:end-1, :);
 
 uv = curr - prev;
 u = [uv(:, 1); 0];
@@ -104,14 +110,15 @@ axis_lims = [a b a b];
 hold on
 plot(x_(:, 1), x_(:, 2), 'ko');
 hold on
-props = quiver(x_(:, 1), x_(:, 2), u, v, ...
+props = quiver(x_mean(:, 1), x_mean(:, 2), u, v, ...
                'color', 'green', 'AutoScale','off');
 props.LineWidth = 2;
 axis(axis_lims)
-plot(x_(1, 1), x_(1, 2), 'kD', 'MarkerSize', 12, ...
-                         'MarkerFaceColor','green');
+plot(x_star(1, 1), x_star(1, 2), ...
+     'kD', 'MarkerSize', 12, ...
+     'MarkerFaceColor','green');
 hold on;
-plot(x_mean(1), x_mean(2), 'kD',...
+plot(x_star(1), x_star(2), 'kD',...
             'MarkerSize', 12, ...
             'MarkerFaceColor','green');
 hold off;
@@ -139,6 +146,15 @@ plot_config.plot_type = 'stem';
 
 iters = 1:length(zbars(:, 1));
 hfigs_s = my_plot(iters, zbars, plot_config);
+
+plot_config.titles = {'', ''};
+plot_config.xlabels = {'', 'Iterations'};
+plot_config.ylabels = {'$\hat{x}_1$', '$\hat{x}_2$'};
+plot_config.grid_size = [2, 1];
+plot_config.plot_type = 'stem';
+
+iters = 1:length(xs(:, 1));
+hfigs_s = my_plot(iters, x_mean, plot_config);
 
 % Save folder
 path = [pwd '/imgs/'];
