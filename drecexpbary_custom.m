@@ -1,5 +1,5 @@
-function [x, xs, m, deltas, zbars] = ...
-            drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
+function [x_star, xhats, xs, ms, deltas, zbars, Fs_n, Fbars_n] = ...
+            drecexpbary_custom(oracle, m0, xhat0, nu, sigma, ...
                                lambda, iterations, accel_fun)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
@@ -13,16 +13,22 @@ function [x, xs, m, deltas, zbars] = ...
 % Out:
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
-        
+    
+    PRECISION = 10;
+    digits(PRECISION);
+    
     % Mass components
     m_1 = m0;
-    z_bar_1 = zeros(size(x0));
-    delta_xhat_1 = zeros(size(x0));
-    xhat_1 = zeros(size(x0));
+    z_bar_1 = zeros(size(xhat0));
+    delta_xhat_1 = zeros(size(xhat0));
+    xhat_1 = zeros(size(xhat0));
     
-    xs = [];
-    ms = [];
+    xhats = xhat0';
+    ms = m0;
     deltas = [];
+    Fs_n = [];
+    Fbars_n = [];
+    xs = [];
     
     solution_found = false;
     
@@ -33,20 +39,22 @@ function [x, xs, m, deltas, zbars] = ...
        % Calculation of mean for stochastic function
        zbar = accel_fun(m_1, xhat_1, delta_xhat_1);
        
-       zbars = [zbars; zbar'];       
+       zbars = [zbars; zbar'];
        z = normrnd(double(zbar), double(sigma));
        
        % Current value of position
        x = xhat_1 + z;
        
+       
        % Mass component
        e_i = exp(-nu*oracle(x));
        m = lambda*m_1 + e_i;
        
+       F_n = vpa(e_i/(m_1 + e_i));
+       Fbar_n = (m_1/(m_1 + e_i))*F_n;
+       
        % Barycenter point
-       sum_hat_1 = m_1*xhat_1;
-       xhat = (1/m)*(lambda*sum_hat_1 + x*e_i);
-        
+       xhat = vpa(xhat_1 + F_n*z);              
        solution_found = i >= iterations;
        
        % Updates
@@ -54,12 +62,15 @@ function [x, xs, m, deltas, zbars] = ...
        delta_xhat_1 = xhat - xhat_1;
        xhat_1 = xhat;
        
-       xs = [xs; xhat'];
+       xs = [xs; x'];
+       xhats = [xhats; xhat'];
        ms = [ms; m];
-       deltas = [deltas; delta_xhat_1']; 
+       deltas = [deltas; delta_xhat_1'];
+       Fs_n = [Fs_n; F_n];
+       Fbars_n = [Fbars_n; Fbar_n];
        
        i = i + 1;
     end
     
-    xs = [x0'; xs];
+    x_star = xhats(end, :);
 end
