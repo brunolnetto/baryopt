@@ -54,7 +54,7 @@ function dx = baryopt(t, x, oracle, nu, lambda, lambda_z, sigma, degree)
     xhat = x(3:2+n);
     zbar = zeros(size(xhat));
         
-    z = normrnd(zbar, sigma);
+    z = gaussianrnd(zbar, sigma);
     x = xhat + z;
     
     e_i = exp(-nu*oracle(x));

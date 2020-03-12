@@ -11,7 +11,7 @@ nu = 5;
 sigma = 0.5;
 Sigma = sigma*eye(n);
 lambda = 1;
-lambda_z = 0;
+lambda_z = 0.9;
 zeta = 2;
 
 % Recursive version
@@ -40,13 +40,16 @@ n_iterations = 100;
 wb = my_waitbar('Calculating minimum...');
 is_accel = false;
 
-accel_fun = @(m_1, xhat_1, delta_xhat_1) ...
+accel_fun_1 = @(m_1, xhat_1, delta_xhat_1) ...
                      non_accel(m_1, xhat_1, delta_xhat_1);
-% accel_fun = @(m_1, xhat_1, delta_xhat_1) ...
-%             pait_accel(m_1, xhat_1, delta_xhat_1, zeta);
-% accel_fun = @(m_1, xhat_1, delta_xhat_1) ...
-%                       integrated_accel(m_1, xhat_1, delta_xhat_1, ...
-%                                        lambda_z, nu, oracle);
+accel_fun_2 = @(m_1, xhat_1, delta_xhat_1) ...
+            pait_accel(m_1, xhat_1, delta_xhat_1, zeta);
+accel_fun_3 = @(m_1, xhat_1, delta_xhat_1) ...
+                  integrated_accel(m_1, xhat_1, delta_xhat_1, ...
+                                   lambda_z, nu, oracle);
+
+accel_funs = {accel_fun_1, accel_fun_2, accel_fun_3};
+accel_fun = accel_funs{1};
 
 xstar_tests = {};
 xs_tests = {};
@@ -56,11 +59,14 @@ zbars_tests = {};
 F_tests = {};
 ms_tests = {};
 Fbar_tests = {}; 
-for i = 1:n_iterations    
-    [x_star, xhats, xs, m, deltas, zbars, Fs_n, Fbars_n] = ...
+for i = 1:n_iterations            
+    [x_star, xhats, xs, m, ...
+     deltas, zbars, Fs_n, Fbars_n] = ...
      drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
                         lambda, iterations, accel_fun);
-        
+    
+    clear(func2str(accel_fun));
+                    
     xstar_tests{end+1} = x_star;
     xs_tests{end+1} = xs;
     xhat_tests{end+1} = xhats;
