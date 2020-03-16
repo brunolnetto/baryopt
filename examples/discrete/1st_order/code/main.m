@@ -30,6 +30,15 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 % oracle = @(x) 3*(1-x(1)).^2.*exp(-(x(1)^2) - (x(2)+1).^2) ... 
 %               - 10*(x(1)/5 - x(1).^3 - x(2).^5).*exp(-x(1).^2-x(2).^2) ... 
 %               - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
+% 
+% syms x y z w
+% x_0 = 1;
+% y_0 = 1;
+% z_0 = 0;
+% w_0 = 0;
+% func = (x - x_0)^2 + (y - y_0)^2 + (z - z_0)^2 + (w - w_0)^2;
+% oracle =  @(x) (x(1) - x_0)^2 + (x(2) - y_0)^2 + ...
+%                (x(3) - z_0)^2 + (x(4) - w_0)^2;
 
 x0 = init_val*ones(n, 1);
 m0 = 1;
@@ -224,6 +233,7 @@ for i = 1:length(delta_tests)
 end
 
 delta_mean = delta_mean/n_iterations;
+delta_mean = delta_mean(:, 1:2);
 
 E_deltas = [];
 [n_x, ~] = size(x_mean);

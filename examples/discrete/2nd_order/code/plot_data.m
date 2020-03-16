@@ -73,17 +73,13 @@ plot_config.xlabels = {'', 'Iterations'};
 plot_config.ylabels = {'Amplitude', 'Amplitude'};
 plot_config.grid_size = [2, 1];
 plot_config.plot_type = 'stem';
-plot_config.legends = {{'$\hat{x}_1$', '$x_1$', '$y_1$'}, ...
-                       {'$\hat{x}_2$', '$x_2$', '$y_2$'}};
-plot_config.pos_multiplots = [1, 1, 2, 2];
-plot_config.markers = {{'-', '--', '*-'}, {'-', '--', '*-'}};
+plot_config.markers = {'-', '--'};
 
-xs_mean = {xhat_mean(2:end, :), [x_mean(:, 1), y_mean(:, 1), ...
-                                 x_mean(:, 2), y_mean(:, 2)]};
+[m, ~] = size(x_mean);
+iters = (1:m)';
+xhat_mean = xhat_mean(2:end, :);
 
-[m, n] = size(x_mean);
-iters = 1:m;
-hfigs_xmean = my_plot(iters, xs_mean, plot_config);
+hfigs_xmean = my_plot(iters, xhat_mean, plot_config);
 
 plot_config.titles = {titletxt, ''};
 plot_config.xlabels = {'', 'Iterations'};
@@ -103,16 +99,6 @@ plot_config.plot_type = 'stem';
 iters = 1:length(fs_mean);
 hfigs_fs = my_plot(iters, fs_mean, plot_config);
 
-plot_config.titles = {titletxt, ''};
-plot_config.xlabels = {'', 'Iterations'};
-plot_config.ylabels = {'$\Delta \hat{x}_1$', '$\Delta \hat{x}_2$'};
-plot_config.grid_size = [2, 1];
-plot_config.plot_type = 'stem';
-
-[m, n] = size(zbars(:, 1));
-iters = 1:m;
-hfigs_delta = my_plot(iters, delta_mean, plot_config);
-
 % Save folder
 path = [pwd '/../imgs/'];
 posfix = [sprintf('lamb%d', 100*lambda), ...
@@ -131,5 +117,3 @@ saveas(hfigs_zmean, [path, fname], 'epsc')
 fname = ['source', posfix];
 saveas(hfigs_fs, [path, fname], 'epsc')
 
-fname = ['deltas', posfix];
-saveas(hfigs_delta, [path, fname], 'epsc')
