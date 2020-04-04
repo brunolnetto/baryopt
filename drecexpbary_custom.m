@@ -1,4 +1,5 @@
-function [x_star, xhats, xs, ms, deltas, zbars, Fs_n, Fbars_n] = ...
+function [x_star, xhats, xs, ms, ...
+          deltas, zbars, Fs_n, Fbars_n] = ...
             drecexpbary_custom(oracle, m0, xhat0, nu, sigma, ...
                                lambda, iterations, accel_fun)
 % Recursive barycenter algorithm for direct optimization
@@ -18,8 +19,9 @@ function [x_star, xhats, xs, ms, deltas, zbars, Fs_n, Fbars_n] = ...
     digits(PRECISION);
     
     % Mass components
-    m_1 = m0;
+    m_1 = terop(m0 ~= 0, m0, eps);
     xhat_1 = xhat0;
+    x_1 = xhat0;
     z_bar_1 = zeros(size(xhat0));
     delta_xhat_1 = zeros(size(xhat0));
     
@@ -37,13 +39,19 @@ function [x_star, xhats, xs, ms, deltas, zbars, Fs_n, Fbars_n] = ...
     while(~solution_found)
        
        % Calculation of mean for stochastic function
-       zbar = accel_fun(m_1, xhat_1, delta_xhat_1);       
-       z = normrnd(double(zbar), double(sigma));
+       zbar = accel_fun(m_1, x_1, delta_xhat_1);
+       
+       z = zeros(length(zbar), 1);
+       for j = 1:length(zbar)
+           z(j) = gaussianrnd(double(zbar(j)), ...
+                              double(sigma));
+       end
        
        % Current value of position
        x = xhat_1 + z;       
        
        % Mass component
+       
        e_i = exp(-nu*oracle(x));
        m = lambda*m_1 + e_i;
        
@@ -59,6 +67,7 @@ function [x_star, xhats, xs, ms, deltas, zbars, Fs_n, Fbars_n] = ...
        m_1 = m;
        delta_xhat_1 = xhat - xhat_1;
        xhat_1 = xhat;
+       x_1 = x;
        
        xs = [xs; x'];
        xhats = [xhats; xhat'];
@@ -69,6 +78,8 @@ function [x_star, xhats, xs, ms, deltas, zbars, Fs_n, Fbars_n] = ...
        zbars = [zbars; zbar'];
        
        i = i + 1;
+       
+       disp(sprintf('i=%3d: fval: %.3f', i, oracle(x)));
     end
     
     x_star = xhats(end, :);

@@ -23,7 +23,7 @@ oracle = @(x) (x(1) - x_0)^2 + (x(2) - y_0)^2;
 x0 = init_val*zeros(n, 1);
 m0 = 0;
 
-iterations = 4;
+iterations = 50;
 n_iterations = 100;
 
 wb = my_waitbar('Calculating minimum...');

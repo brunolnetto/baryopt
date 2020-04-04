@@ -18,7 +18,7 @@ syms x y
 x_0 = 1;
 y_0 = -1;
 func = (x - x_0)^2 + (y - y_0)^2;
-oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
+oracle = @(x) (x(1) - x_0)^2 + (x(2) - y_0)^2;
 
 % syms x y
 % func = 3*(1-x).^2.*exp(-(x^2) - (y+1)^2) ... 
@@ -33,7 +33,7 @@ x0 = init_val*ones(n, 1);
 m0 = 1;
 
 iterations = 100;
-n_iterations = 100;
+n_iterations = 500;
 
 wb = my_waitbar('Calculating minimum...');
 is_accel = false;
@@ -77,7 +77,8 @@ for i = 1:length(names)
     
     % Method understood
     for j = 1:n_iterations    
-        [x_star, xhats, xs, m, deltas, zbars, Fs_n, Fbars_n] = ...
+        [x_star, xhats, xs, m, ...
+         deltas, zbars, Fs_n, Fbars_n] = ...
          drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
                             lambda, iterations, accel_fun);
 
@@ -155,8 +156,9 @@ for i = 1:length(names)
 end
 
 % -------- Plots --------
-title = sprintf('$\\nu = %.2f$, $\\sigma = %.2f$, $\\zeta = %.2f$, $\\lambda_z = %.2f$', ...
-                nu, sigma, zeta, lambda_z);
+title_txt = ['$\\nu = %.2f$, $\\sigma = %.2f$,', ...
+            '$\\zeta = %.2f$, $\\lambda_z = %.2f$'];
+title = sprintf(title_txt, nu, sigma, zeta, lambda_z);
 legend_atom = {'$\bar{z} = 0$', ...
                '$\bar{z} = \zeta \, \Delta \hat{x}$', ...
                '$\bar{z} = barycenter([\Delta \hat{x}_1, \cdots, \Delta \hat{x}_{n-1}])$'};
@@ -174,7 +176,7 @@ plot_config_z.pos_multiplots = [1, 1, 2, 2];
 plot_config_z.markers = {markers_atom, markers_atom};
 
 zbars_means23 = double([zbars_means{2}, zbars_means{3}]);
-zbars_ = {double(zbars_means{1}), ...
+zbars_ = {double(zbar_mean), ...
           [zbars_means23(:, 1), zbars_means23(:, 3), ...
            zbars_means23(:, 2), zbars_means23(:, 4)]};
 
@@ -183,8 +185,8 @@ iters = (1:length(zbars(:, 1)))';
 hfigs_zmean = my_plot(iters, zbars_, plot_config_z);
 
 % function plot
-fs_ = {double(fs_means{1}), ...
-       double([fs_means{2}, fs_means{3}])};
+fs_ = {double(fs_mean{1}), ...
+       double([fs_mean{2}, fs_mean{3}])};
 
 plot_config_f.titles = {[title, ' $f(x, y) := ', latex(func),'$']};
 plot_config_f.xlabels = {'Iterations'};
@@ -220,7 +222,7 @@ hfigs_delta_mean = my_plot(iters, delta_xhat_, plot_config_delta);
 xhat_means23 = double([xhat_means{2}, xhat_means{3}]);
 xhat_ = {double(xhat_means{1}), ...
           double([xhat_means23(:, 1), xhat_means23(:, 3), ...
-                  xhat_means23(:, 2), xhat_means23(:, 4)])};''
+                  xhat_means23(:, 2), xhat_means23(:, 4)])};
 
 plot_config_xhat.titles = {title, ''};
 plot_config_xhat.xlabels = {'', 'Iterations'};
@@ -232,7 +234,7 @@ plot_config_xhat.pos_multiplots = [1, 1, 2, 2];
 plot_config_xhat.markers = {markers_atom, markers_atom};
 
 iters = (1:length(xhat_{1}))';
-hfigs_xmean = my_plot(iters, xhat_, plot_config_xhat);
+hfigs_xhatmean = my_plot(iters, xhat_, plot_config_xhat);
 
 % x plot
 x_means23 = double([x_means{2}, x_means{3}]);
@@ -256,7 +258,7 @@ m_ = {double(ms_means{1}), double([ms_means{2}, ms_means{3}])};
 
 plot_config_m.titles = {''};
 plot_config_m.xlabels = {'Iterations'};
-plot_config_m.ylabels = {'$x_1$'};
+plot_config_m.ylabels = {'$f(x_1, x_2)$'};
 plot_config_m.grid_size = [1, 1];
 plot_config_m.plot_type = 'stem';
 plot_config_m.legends = {legend_atom};
@@ -265,4 +267,25 @@ plot_config_m.markers = {markers_atom};
 
 iters = (1:length(m_{1}))';
 hfigs_xmean = my_plot(iters, m_, plot_config_m);
+
+hfigs = {hfigs_zmean, hfigs_fs, ...
+         hfigs_delta_mean, hfigs_xhatmean. ...
+         hfigs_xmean, hfigs_mmean};
+
+for hfig = hfigs
+    hfig = hfig{1};
+
+    % Save folder
+    path = [pwd '/../imgs/'];
+    fname = ['zbar_effect_', ...
+             sprintf('_lamb%.2f', lambda), ...
+             sprintf('_sigma%.2f', sigma), ...
+             sprintf('_nu%.2f', nu), ...
+             sprintf('_nu%.2f', nu), ...
+             '_', name];
+    fname = erase(fname,".");
+    saveas(hfig, [path, fname, '.eps'], 'epsc')
+end
+
+
 

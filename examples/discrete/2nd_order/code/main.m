@@ -2,6 +2,8 @@ close all
 clear all
 clc
 
+error('Deprecated');
+
 n = 2;
 nu = 1;
 sigma = 0.5;
@@ -37,7 +39,7 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 %               - 1/3*exp(-(x(1)+1).^2 - x(2).^2);
 
 init_val = 0;
-xhat0 = [1; -1];
+xhat0 = [0.5; 0.5];
 vhat0 = [0; 0];
 m0 = 1;
 

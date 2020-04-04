@@ -11,7 +11,7 @@ nu = 5;
 sigma = 0.5;
 Sigma = sigma*eye(n);
 lambda = 1;
-lambda_z = 0.9;
+lambda_z = 1;
 zeta = 2;
 
 % Recursive version
@@ -43,22 +43,21 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 x0 = init_val*ones(n, 1);
 m0 = 1;
 
-iterations = 100;
-n_iterations = 100;
+iterations = 300;
+n_iterations = 200;
 
-wb = my_waitbar('Calculating minimum...');
 is_accel = false;
 
-accel_fun_1 = @(m_1, xhat_1, delta_xhat_1) ...
-                     non_accel(m_1, xhat_1, delta_xhat_1);
-accel_fun_2 = @(m_1, xhat_1, delta_xhat_1) ...
-            pait_accel(m_1, xhat_1, delta_xhat_1, zeta);
-accel_fun_3 = @(m_1, xhat_1, delta_xhat_1) ...
-                  integrated_accel(m_1, xhat_1, delta_xhat_1, ...
+accel_fun_1 = @(m_1, x_1, delta_xhat_1) ...
+                     non_accel(m_1, x_1, delta_xhat_1);
+accel_fun_2 = @(m_1, x_1, delta_xhat_1) ...
+            pait_accel(m_1, x_1, delta_xhat_1, zeta);
+accel_fun_3 = @(m_1, x_1, delta_xhat_1) ...
+                  integrated_accel(m_1, x_1, delta_xhat_1, ...
                                    lambda_z, nu, oracle);
 
 accel_funs = {accel_fun_1, accel_fun_2, accel_fun_3};
-accel_fun = accel_funs{1};
+accel_fun = accel_funs{3};
 
 xstar_tests = {};
 xs_tests = {};
@@ -67,7 +66,9 @@ delta_tests = {};
 zbars_tests = {}; 
 F_tests = {};
 ms_tests = {};
-Fbar_tests = {}; 
+Fbar_tests = {};
+
+wb = my_waitbar('Calculating minimum...');
 for i = 1:n_iterations            
     [x_star, xhats, xs, m, ...
      deltas, zbars, Fs_n, Fbars_n] = ...
@@ -85,8 +86,10 @@ for i = 1:n_iterations
     Fbar_tests{end+1} = Fbars_n;
     ms_tests{end+1} = m;
     
-    wb.update_waitbar(i, n_iterations);
+    wb = wb.update_waitbar(i, n_iterations);
 end
+
+wb.close_window();
 
 axis_span = 1.5;
 
@@ -190,10 +193,13 @@ plot_config.legends = {{'$\hat{x}_1$', '$x$'}, ...
 plot_config.pos_multiplots = [1, 2];
 plot_config.markers = {{'-', '--'}, {'-', '--'}};
 
-ys = {xhat_mean, x_mean};
+ys = {xhat_mean(1:end-1, :), x_mean};
 
-iters = 1:length(xs(:, 1));
-hfigs_xmean = my_plot(iters, xhat_mean, plot_config);
+iters = (1:(length(xs(:, 1)) - 1))';
+[hfigs_xmean, axs] = my_plot(iters, ys, plot_config);
+
+axis(axs{1}{1}, 'square');
+axis(axs{1}{2}, 'square');
 
 zbar_mean = zeros(size(zbars_tests{1}));
 for i = 1:length(zbars_tests)
@@ -209,7 +215,10 @@ plot_config.grid_size = [2, 1];
 plot_config.plot_type = 'stem';
 
 iters = 1:length(zbars(:, 1));
-hfigs_zmean = my_plot(iters, zbar_mean, plot_config);
+[hfigs_zmean, axs] = my_plot(iters, zbar_mean, plot_config);
+
+axis(axs{1}{1}, 'square');
+axis(axs{1}{2}, 'square');
 
 fs = [];
 for i = 1:iterations
@@ -224,8 +233,9 @@ plot_config.grid_size = [1, 1];
 plot_config.plot_type = 'stem';
 
 iters = 1:length(fs);
-hfigs_fs = my_plot(iters, fs, plot_config);
+[hfigs_fs, ax] = my_plot(iters, fs, plot_config);
 
+axis(ax{1}{1}, 'square');
 
 delta_mean = zeros(size(delta_tests{1}));
 for i = 1:length(delta_tests)
@@ -235,32 +245,17 @@ end
 delta_mean = delta_mean/n_iterations;
 delta_mean = delta_mean(:, 1:2);
 
-E_deltas = [];
-[n_x, ~] = size(x_mean);
-for i = 1:n_x
-    grad_x_i = double(subs(grad_f, [x, y], x_mean(i, 1:2)));
-    F_mean_i = F_mean(i);
-    Fbar_mean_i = Fbar_mean(i);
-    zbar_mean_i = zbar_mean(i, :);
-    delta_xhat_i = F_mean_i*zbar_mean_i' - nu*Sigma*Fbar_mean_i*grad_x_i;
-    
-    E_deltas = [E_deltas; delta_xhat_i'];
-end
-
 plot_config.titles = {'', ''};
 plot_config.xlabels = {'', 'Iterations'};
 plot_config.ylabels = {'$\Delta \hat{x}_1$', '$\Delta \hat{x}_2$'};
 plot_config.grid_size = [2, 1];
 plot_config.plot_type = 'stem';
-plot_config.legends = {{'$\bar{\Delta \hat{x}_1}$', '$\rm{E}[\Delta \hat{x}_1]$'}, ...
-                       {'$\bar{\Delta \hat{x}_2}$', '$\rm{E}[\Delta \hat{x}_2]$'}};
-plot_config.pos_multiplots = [1, 2];
-plot_config.markers = {{'-', '--'}, {'-', '--'}};
 
-ys = {delta_mean, E_deltas};
+iters = 1:length(delta_mean(:, 1));
+[hfigs_zmean, axs] = my_plot(iters, delta_mean, plot_config);
 
-iters = 1:length(delta_mean);
-hfigs_delta = my_plot(iters, ys, plot_config);
+axis(axs{1}{1}, 'square');
+axis(axs{1}{2}, 'square');
 
 % Save folder
 path = [pwd '/../imgs/'];
@@ -280,5 +275,3 @@ saveas(hfigs_zmean, [path, fname], 'epsc')
 fname = ['source', posfix];
 saveas(hfigs_fs, [path, fname], 'epsc')
 
-fname = ['deltas', posfix];
-saveas(hfigs_delta, [path, fname], 'epsc')
