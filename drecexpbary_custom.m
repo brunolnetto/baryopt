@@ -1,7 +1,7 @@
 function [x_star, xhats, xs, ms, ...
           deltas, zbars, Fs_n, Fbars_n] = ...
             drecexpbary_custom(oracle, m0, xhat0, nu, sigma, ...
-                               lambda, iterations, accel_fun)
+                               lambda, iterations, accel_fun, options)
 % Recursive barycenter algorithm for direct optimization
 % https://arxiv.org/abs/1801.10533
 % In:
@@ -15,8 +15,9 @@ function [x_star, xhats, xs, ms, ...
 %   - x []: Optimum position
 %   - xs []: Optimum position evolution
     
-    PRECISION = 10;
-    digits(PRECISION);
+    if(nargin == 8)
+        options = struct('verbose', false);
+    end
     
     % Mass components
     m_1 = terop(m0 ~= 0, m0, eps);
@@ -35,23 +36,40 @@ function [x_star, xhats, xs, ms, ...
     
     solution_found = false;
     
-    i = 1;
+    coord_string = '';
+    for i = 1:length(xhat0)
+        coord_string = [coord_string, '%+1.3f'];
+        if(i ~= length(xhat0))
+            coord_string = [coord_string, ', '];
+        end
+    end
+    
+    xhat = xhat0;
+    zbar = z_bar_1;
+    
+    j = 1;
     while(~solution_found)
-       
-       % Calculation of mean for stochastic function
+       if(options.verbose)
+           args = [j, xhat', zbar', oracle(xhat)];
+           disp(sprintf([' iter = %3d: ', ...
+                     ' xhat: ', '(', coord_string, ')', ...
+                     ' zbar: ', '(', coord_string, ')', ...
+                     ' fval: %.3f'], args));
+       end
+        
+       % Expected value for stochastic function
        zbar = accel_fun(m_1, x_1, delta_xhat_1);
        
        z = zeros(length(zbar), 1);
-       for j = 1:length(zbar)
-           z(j) = gaussianrnd(double(zbar(j)), ...
+       for k = 1:length(zbar)
+           z(k) = gaussianrnd(double(zbar(k)), ...
                               double(sigma));
        end
        
        % Current value of position
-       x = xhat_1 + z;       
+       x = xhat_1 + z;
        
        % Mass component
-       
        e_i = exp(-nu*oracle(x));
        m = lambda*m_1 + e_i;
        
@@ -61,13 +79,13 @@ function [x_star, xhats, xs, ms, ...
        % Barycenter point
        xhat = vpa(xhat_1 + F_n*z);              
        
-       solution_found = i >= iterations;
+       solution_found = j >= iterations;
        
        % Updates
-       m_1 = m;
-       delta_xhat_1 = xhat - xhat_1;
-       xhat_1 = xhat;
-       x_1 = x;
+       m_1 = vpa(m);
+       delta_xhat_1 = vpa(xhat - xhat_1);
+       xhat_1 = vpa(xhat);
+       x_1 = vpa(x);
        
        xs = [xs; x'];
        xhats = [xhats; xhat'];
@@ -77,10 +95,8 @@ function [x_star, xhats, xs, ms, ...
        Fbars_n = [Fbars_n; Fbar_n];
        zbars = [zbars; zbar'];
        
-       i = i + 1;
-       
-       disp(sprintf('i=%3d: fval: %.3f', i, oracle(x)));
+       j = j + 1;
     end
     
-    x_star = xhats(end, :);
+    x_star = xhats(end, :)';
 end
