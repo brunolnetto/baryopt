@@ -19,6 +19,9 @@ function [x_star, xhats, xs, ms, ...
         options = struct('verbose', false);
     end
     
+    alpha_n = 1;
+    deltas = [];
+        
     % Mass components
     m_1 = terop(m0 ~= 0, m0, eps);
     xhat_1 = xhat0;
@@ -46,6 +49,7 @@ function [x_star, xhats, xs, ms, ...
     
     xhat = xhat0;
     zbar = z_bar_1;
+    max_grad0 = 0;
     
     j = 1;
     while(~solution_found)
@@ -61,9 +65,10 @@ function [x_star, xhats, xs, ms, ...
        zbar = accel_fun(m_1, x_1, delta_xhat_1);
        
        z = zeros(length(zbar), 1);
-       for k = 1:length(zbar)
-           z(k) = gaussianrnd(double(zbar(k)), ...
-                              double(sigma));
+       for k = 1:length(zbar)            
+           sigma_n = double(sigma);
+           
+           z(k) = gaussianrnd(double(zbar(k)), sigma_n);
        end
        
        % Current value of position

@@ -47,6 +47,7 @@ iterations = 150;
 n_iterations = 100;
 
 is_accel = false;
+options = struct('verbose', true);
 
 xstar_tests = {};
 xs_tests = {};
@@ -57,7 +58,7 @@ F_tests = {};
 ms_tests = {};
 Fbar_tests = {};
 
-accel_fun_txts = {'integrated_accel'};
+accel_fun_txts = {'non_accel'};
 
 wb = my_waitbar('Calculating minimum...');
 
@@ -91,7 +92,7 @@ for accel_fun_txt = accel_fun_txts
          deltas, zbars, ...
          Fs_n, Fbars_n] = ...
          drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
-                            lambda, iterations, accel_fun);
+                            lambda, iterations, accel_fun, options);
 
         clear(func2str(accel_fun));
 
@@ -213,7 +214,25 @@ for accel_fun_txt = accel_fun_txts
 
     iters = (1:(length(xs(:, 1)) - 1))';
     [hfigs_xmean, axs] = my_plot(iters, ys, plot_config);
-
+    
+    plot_config.titles = {''};
+    plot_config.xlabels = {'Iterations'};
+    plot_config.ylabels = {'$F_n$'};
+    plot_config.grid_size = [1, 1];
+    plot_config.plot_type = 'stem';
+    
+    iters = 1:length(F_mean);
+    [hfigs_Fmean, axs] = my_plot(iters, F_mean, plot_config);
+    
+    plot_config.titles = {''};
+    plot_config.xlabels = {'Iterations'};
+    plot_config.ylabels = {'$\bar{F}_n$'};
+    plot_config.grid_size = [1, 1];
+    plot_config.plot_type = 'stem';
+    
+    iters = 1:length(Fbar_mean);
+    [hfigs_Fbarmean, axs] = my_plot(iters, Fbar_mean, plot_config);
+    
     axis(axs{1}{1}, 'square');
     axis(axs{1}{2}, 'square');
 
@@ -272,7 +291,7 @@ for accel_fun_txt = accel_fun_txts
 
     axis(axs{1}{1}, 'square');
     axis(axs{1}{2}, 'square');
-
+    
     % Save folder
     path = [pwd '/../imgs/'];
     posfix = [sprintf('lamb%d', 100*lambda), ...
