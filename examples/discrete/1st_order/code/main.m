@@ -22,6 +22,8 @@ func = (x - x_0)^2 + (y - y_0)^2;
 grad_f = gradient(func);
 oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 
+FontSize = 25;
+
 % syms x y
 % func = 3*(1-x).^2.*exp(-(x^2) - (y+1)^2) ... 
 %               - 10*(x/5 - x.^3 - y^5).*exp(-x^2-y^2) ... 
@@ -43,8 +45,8 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 x0 = init_val*ones(n, 1);
 m0 = 1;
 
-iterations = 150;
-n_iterations = 100;
+iterations = 100;
+n_iterations = 200;
 
 is_accel = false;
 options = struct('verbose', true);
@@ -58,7 +60,7 @@ F_tests = {};
 ms_tests = {};
 Fbar_tests = {};
 
-accel_fun_txts = {'non_accel'};
+accel_fun_txts = {'integrated_accel'};
 
 wb = my_waitbar('Calculating minimum...');
 
@@ -88,6 +90,8 @@ for accel_fun_txt = accel_fun_txts
                             non_accel(m_1, x_1, delta_xhat_1);
         end
 
+        options = struct('verbose', true);
+        
         [x_star, xhats, xs, m, ...
          deltas, zbars, ...
          Fs_n, Fbars_n] = ...
@@ -130,16 +134,17 @@ for accel_fun_txt = accel_fun_txts
     hfig = my_figure();
     contourf(X, Y, Z)
     hold on;
-
+    
+    n_sim = length(xhat_tests);
     x_star = zeros(1, 2);
-    for i = 1:length(xhat_tests)
+    for i = 1:n_sim
         x_aux = xstar_tests{i};
         x_star = x_star + x_aux';
     end
 
-    x_star = x_star/n_iterations;
+    x_star = x_star/n_sim;
 
-    for i = 1:length(xhat_tests)
+    for i = 1:n_sim
         xs = xhat_tests{i};
         plot(xs(:, 1), xs(:, 2), 'r.');
         hold on;
@@ -156,10 +161,10 @@ for accel_fun_txt = accel_fun_txts
         Fbar_mean = Fbar_mean + Fbar_tests{i};
     end
 
-    xhat_mean = xhat_mean/n_iterations;
-    x_mean = x_mean/n_iterations;
-    F_mean = F_mean/n_iterations;
-    Fbar_mean = Fbar_mean/n_iterations;
+    xhat_mean = double(xhat_mean/n_sim);
+    x_mean = double(x_mean/n_sim);
+    F_mean = double(F_mean/n_sim);
+    Fbar_mean = double(Fbar_mean/n_iterations);
 
     curr = xhat_mean(2:end, :); 
     prev = xhat_mean(1:end-1, :);
@@ -167,7 +172,9 @@ for accel_fun_txt = accel_fun_txts
     uv = curr - prev;
     u = [uv(:, 1); 0];
     v = [uv(:, 2); 0];
-
+    
+    FontSize = 20;
+    
     axis_lims = [a b a b];
     hold on
     plot(x_(:, 1), x_(:, 2), 'ko');
@@ -197,9 +204,12 @@ for accel_fun_txt = accel_fun_txts
     xlabel('x', 'interpreter', 'latex');
     ylabel('y', 'interpreter', 'latex');
 
-    ax = gca;
-    tighten_plot(ax);
-
+    axs = gca;
+    
+    axis(axs, 'square');
+    axs.FontSize = FontSize;
+    tighten_plot(axs);
+    
     plot_config.titles = {'', ''};
     plot_config.xlabels = {'', 'Iterations'};
     plot_config.ylabels = {'Amplitude', 'Amplitude'};
@@ -215,6 +225,11 @@ for accel_fun_txt = accel_fun_txts
     iters = (1:(length(xs(:, 1)) - 1))';
     [hfigs_xmean, axs] = my_plot(iters, ys, plot_config);
     
+    axis(axs{1}{1}, 'square');
+    axis(axs{1}{2}, 'square');
+    axs{1}{1}.FontSize = FontSize;
+    axs{1}{2}.FontSize = FontSize;
+    
     plot_config.titles = {''};
     plot_config.xlabels = {'Iterations'};
     plot_config.ylabels = {'$F_n$'};
@@ -223,6 +238,9 @@ for accel_fun_txt = accel_fun_txts
     
     iters = 1:length(F_mean);
     [hfigs_Fmean, axs] = my_plot(iters, F_mean, plot_config);
+    
+    axis(axs{1}{1}, 'square');
+    axs{1}{1}.FontSize = FontSize;
     
     plot_config.titles = {''};
     plot_config.xlabels = {'Iterations'};
@@ -234,7 +252,7 @@ for accel_fun_txt = accel_fun_txts
     [hfigs_Fbarmean, axs] = my_plot(iters, Fbar_mean, plot_config);
     
     axis(axs{1}{1}, 'square');
-    axis(axs{1}{2}, 'square');
+    axs{1}{1}.FontSize = FontSize;
 
     zbar_mean = zeros(size(zbars_tests{1}));
     for i = 1:length(zbars_tests)
@@ -254,6 +272,8 @@ for accel_fun_txt = accel_fun_txts
 
     axis(axs{1}{1}, 'square');
     axis(axs{1}{2}, 'square');
+    axs{1}{1}.FontSize = FontSize;
+    axs{1}{2}.FontSize = FontSize;
 
     fs = [];
     for i = 1:iterations
@@ -268,10 +288,29 @@ for accel_fun_txt = accel_fun_txts
     plot_config.plot_type = 'stem';
 
     iters = 1:length(fs);
-    [hfigs_fs, ax] = my_plot(iters, fs, plot_config);
+    [~, axs] = my_plot(iters, fs, plot_config);
 
-    axis(ax{1}{1}, 'square');
+    axis(axs{1}{1}, 'square');
+    axs{1}{1}.FontSize = FontSize;
+    
+    delta_fs = [];
+    for i = 2:iterations
+        delta_f_i = fs(i) - fs(i-1);
+        delta_fs = [delta_fs; delta_f_i];
+    end
+    
+    plot_config.titles = {['']};
+    plot_config.xlabels = {'Iterations'};
+    plot_config.ylabels = {'$\Delta \, f(x, y)$'};
+    plot_config.grid_size = [1, 1];
+    plot_config.plot_type = 'stem';
 
+    iters = 1:length(fs);
+    [hfigs_fs, axs] = my_plot(iters(2:end), delta_fs, plot_config);
+
+    axis(axs{1}{1}, 'square');
+    axs{1}{1}.FontSize = FontSize;
+    
     delta_mean = zeros(size(delta_tests{1}));
     for i = 1:length(delta_tests)
         delta_mean = delta_mean + delta_tests{i};
@@ -291,6 +330,8 @@ for accel_fun_txt = accel_fun_txts
 
     axis(axs{1}{1}, 'square');
     axis(axs{1}{2}, 'square');
+    axs{1}{1}.FontSize = FontSize;
+    axs{1}{2}.FontSize = FontSize;
     
     % Save folder
     path = [pwd '/../imgs/'];
@@ -301,16 +342,28 @@ for accel_fun_txt = accel_fun_txts
     fname = ['multiple_points',  posfix];
     saveas(hfig, [path, fname], 'epsc')
 
-    fname = ['x_mean', accel_fun_txt, '_', posfix];
+    fname = [accel_fun_txt, '/', 'x_mean', accel_fun_txt, '_', posfix];
     saveas(hfigs_xmean, [path, fname], 'epsc')
 
-    fname = ['zbars', accel_fun_txt, '_', posfix];
+    fname = [accel_fun_txt, '/', 'zbars', accel_fun_txt, '_', posfix];
     saveas(hfigs_zmean, [path, fname], 'epsc')
 
-    fname = ['delta', accel_fun_txt, '_', posfix];
+    fname = [accel_fun_txt, '/','delta', accel_fun_txt, '_', posfix];
     saveas(hfigs_deltamean, [path, fname], 'epsc')
 
-    fname = ['source', accel_fun_txt, '_', posfix];
+    fname = [accel_fun_txt, '/', 'source', accel_fun_txt, '_', posfix];
     saveas(hfigs_fs, [path, fname], 'epsc')
+    
+    % ---
+    fname = [accel_fun_txt, '/', 'x_mean', accel_fun_txt, '_', posfix];
+    saveas(hfigs_xmean, [path, fname], 'fig')
 
+    fname = [accel_fun_txt, '/', 'zbars', accel_fun_txt, '_', posfix];
+    saveas(hfigs_zmean, [path, fname], 'fig')
+
+    fname = [accel_fun_txt, '/','delta', accel_fun_txt, '_', posfix];
+    saveas(hfigs_deltamean, [path, fname], 'fig')
+
+    fname = [accel_fun_txt, '/', 'source', accel_fun_txt, '_', posfix];
+    saveas(hfigs_fs, [path, fname], 'fig')
 end

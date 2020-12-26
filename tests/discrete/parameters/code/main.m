@@ -28,18 +28,20 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 x0 = init_val*ones(n, 1);
 m0 = 0;
 
-n_iterations = 150;
+n_iterations = 75;
 
-% nus = [1 5 10];
-% sigmas = [0.1 1];
-% lambdas = [0.9 1];
-
-accel_fun = @(m_1, xhat_1, delta_xhat_1) ...
+accel_fun = @(m_1, xhat_1, ...
+              delta_xhat_1) ...
               non_accel(m_1, xhat_1, delta_xhat_1);
 
-nus = [1, 3.3, 10];
+nus = [1, 10, 20];
 sigmas = [0.1, 1];
-lambdas = [1, 0.9];
+lambdas = [1, 0.5];
+
+j = 1;
+len_params = length(nus)*length(sigmas)*length(lambdas);
+
+great_wb = my_waitbar('Parameter great waitbar');
 
 for nu = nus
     for sigma = sigmas
@@ -59,6 +61,8 @@ for nu = nus
 
                 wb.update_waitbar(i, n_iterations);
             end
+            
+            wb.close_window();
             
             % Average value
             xhat_mean = zeros(size(xhat_tests{1}));
@@ -104,8 +108,7 @@ for nu = nus
             hold on
             plot(xhat_mean(:, 1), xhat_mean(:, 2), 'rx');
             hold on
-            props = quiver(xhat_mean(:, 1), ...
-                           xhat_mean(:, 2), ...
+            props = quiver(xhat_mean(:, 1), xhat_mean(:, 2), ...
                            u, v, 'AutoScale','off');
             props.LineWidth = 2;
             hold on
@@ -115,7 +118,7 @@ for nu = nus
 
             axis square
             axis([a b a b])
-
+            
             titletxt = sprintf(['$\\nu$ = ', num2str(nu), ', ', ...
                                 '$\\sigma$ = ', num2str(sigma'), ', ', ...
                                 '$\\lambda$ = ', num2str(lambda)]);
@@ -123,10 +126,11 @@ for nu = nus
             htitle.Interpreter = 'latex';
             xlabel('x', 'interpreter', 'latex');
             ylabel('y', 'interpreter', 'latex');
-
+            
             ax = gca();
-            tighten_plot(ax);
-
+            ax.Units = hfig.Units;
+            ax.FontSize = 25;
+            
             % Save folder
             path = [pwd '/../imgs/'];
             fname = ['multiple_points', ...
@@ -135,7 +139,12 @@ for nu = nus
                      sprintf('nu%.2f', nu)];
             fname = erase(fname,".");
             saveas(hfig, [path, fname, '.eps'], 'epsc')
+            saveas(hfig, [path, fname, '.fig'])
+            
+            great_wb.update_waitbar(j, len_params);
+            j = j + 1;
         end
     end
 end
 
+great_wb.close_window();

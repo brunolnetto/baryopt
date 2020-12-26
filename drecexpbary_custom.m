@@ -26,6 +26,7 @@ function [x_star, xhats, xs, ms, ...
     m_1 = terop(m0 ~= 0, m0, eps);
     xhat_1 = xhat0;
     x_1 = xhat0;
+    zbar0 = zeros(size(xhat0));
     z_bar_1 = zeros(size(xhat0));
     delta_xhat_1 = zeros(size(xhat0));
     
@@ -36,29 +37,27 @@ function [x_star, xhats, xs, ms, ...
     Fs_n = [];
     Fbars_n = [];
     xs = [];
+    fs = oracle(xhat0);
     
     solution_found = false;
     
-    coord_string = '';
-    for i = 1:length(xhat0)
-        coord_string = [coord_string, '%+1.3f'];
-        if(i ~= length(xhat0))
-            coord_string = [coord_string, ', '];
-        end
-    end
+    coord_string_xhat = vec2str(xhat0);
+    coord_string_zbar = vec2str(zbar0);
     
     xhat = xhat0;
     zbar = z_bar_1;
     max_grad0 = 0;
     
     j = 1;
+    wb = my_waitbar('Calculating minimum...');
+    
     while(~solution_found)
        if(options.verbose)
            args = [j, xhat', zbar', oracle(xhat)];
            disp(sprintf([' iter = %3d: ', ...
-                     ' xhat: ', '(', coord_string, ')', ...
-                     ' zbar: ', '(', coord_string, ')', ...
-                     ' fval: %.3f'], args));
+                         ' xhat: ', '(', coord_string_xhat, ')', ...
+                         ' zbar: ', '(', coord_string_zbar, ')', ...
+                         ' fval: %.3f'], args));
        end
         
        % Expected value for stochastic function
@@ -75,7 +74,9 @@ function [x_star, xhats, xs, ms, ...
        x = xhat_1 + z;
        
        % Mass component
-       e_i = exp(-nu*oracle(x));
+       fx = oracle(x);
+       
+       e_i = exp(-nu*fx);
        m = lambda*m_1 + e_i;
        
        F_n = vpa(e_i/m);
@@ -92,6 +93,7 @@ function [x_star, xhats, xs, ms, ...
        xhat_1 = vpa(xhat);
        x_1 = vpa(x);
        
+       fs = [fs; fx];
        xs = [xs; x'];
        xhats = [xhats; xhat'];
        ms = [ms; m];
@@ -100,8 +102,12 @@ function [x_star, xhats, xs, ms, ...
        Fbars_n = [Fbars_n; Fbar_n];
        zbars = [zbars; zbar'];
        
+       wb = wb.update_waitbar(j, iterations);
+       
        j = j + 1;
     end
+    
+    wb.close_window();
     
     x_star = xhats(end, :)';
 end
