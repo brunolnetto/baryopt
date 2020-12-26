@@ -28,29 +28,49 @@ oracle = @(x) (x(1) - 1)^2 + (x(2) + 1)^2;
 x0 = init_val*ones(n, 1);
 m0 = 0;
 
-n_iterations = 50;
+n_iterations = 75;
 
-nus = [1 5 10];
-sigmas = [0.1 1];
-lambdas = [0.9 1];
+accel_fun = @(m_1, xhat_1, ...
+              delta_xhat_1) ...
+              non_accel(m_1, xhat_1, delta_xhat_1);
+
+nus = [1, 10, 20];
+sigmas = [0.1, 1];
+lambdas = [1, 0.5];
+
+j = 1;
+len_params = length(nus)*length(sigmas)*length(lambdas);
+
+great_wb = my_waitbar('Parameter great waitbar');
 
 for nu = nus
     for sigma = sigmas
         for lambda = lambdas
-            x_test = [];
+            xhat_tests = {};
 
             wb = my_waitbar('Calculating minimum...');
 
             for i = 1:n_iterations
-                [x, xs, m, deltas, zbars] = ...
+                [x_star, xhats, xs, ms, ...
+                 deltas, zbars, Fs_n, Fbars_n] = ...
                     drecexpbary_custom(oracle, m0, x0, ...
                                        nu, sigma, lambda, ...
-                                       0, iterations, false);
-                x_test = [x_test, x];
+                                       iterations, accel_fun);
+                
+                xhat_tests{i} = xhats;
 
                 wb.update_waitbar(i, n_iterations);
             end
-
+            
+            wb.close_window();
+            
+            % Average value
+            xhat_mean = zeros(size(xhat_tests{1}));
+            for i = 1:length(xhat_tests)
+                xhat_mean = xhat_mean + xhat_tests{i};
+            end
+            xhat_mean = xhat_mean/n_iterations;
+            
             axis_span = 3.5;
 
             a = -axis_span;
@@ -72,27 +92,33 @@ for nu = nus
             hfig = my_figure();
             contourf(X, Y, Z)
 
-            curr = xs(2:end, :); 
-            prev = xs(1:end-1, :);
+            curr = xhat_mean(2:end, :); 
+            prev = xhat_mean(1:end-1, :);
 
             uv = curr - prev;
             u = [uv(:, 1); 0];
             v = [uv(:, 2); 0];
-
+            
+            for i = 1:length(xhat_tests)
+                hold on
+                xhat_test = xhat_tests{i};
+                plot(xhat_test(:, 1), xhat_test(:, 2), 'rx');
+            end
+            
             hold on
-            plot(xs(:, 1), xs(:, 2), 'rx');
+            plot(xhat_mean(:, 1), xhat_mean(:, 2), 'rx');
             hold on
-            props = quiver(xs(:, 1), xs(:, 2), u, v, 'AutoScale','off');
+            props = quiver(xhat_mean(:, 1), xhat_mean(:, 2), ...
+                           u, v, 'AutoScale','off');
             props.LineWidth = 2;
             hold on
-            plot(xs(end, 1), xs(end, 2), ...
-                 '-p', 'MarkerFaceColor','red',...
-                 'MarkerSize',15);
+            plot(xhat_mean(end, 1), xhat_mean(end, 2), ...
+                 '-p', 'MarkerFaceColor', 'red', 'MarkerSize',15);
             hold off
 
             axis square
             axis([a b a b])
-
+            
             titletxt = sprintf(['$\\nu$ = ', num2str(nu), ', ', ...
                                 '$\\sigma$ = ', num2str(sigma'), ', ', ...
                                 '$\\lambda$ = ', num2str(lambda)]);
@@ -100,10 +126,11 @@ for nu = nus
             htitle.Interpreter = 'latex';
             xlabel('x', 'interpreter', 'latex');
             ylabel('y', 'interpreter', 'latex');
-
+            
             ax = gca();
-            tighten_plot(ax);
-
+            ax.Units = hfig.Units;
+            ax.FontSize = 25;
+            
             % Save folder
             path = [pwd '/../imgs/'];
             fname = ['multiple_points', ...
@@ -112,7 +139,12 @@ for nu = nus
                      sprintf('nu%.2f', nu)];
             fname = erase(fname,".");
             saveas(hfig, [path, fname, '.eps'], 'epsc')
+            saveas(hfig, [path, fname, '.fig'])
+            
+            great_wb.update_waitbar(j, len_params);
+            j = j + 1;
         end
     end
 end
 
+great_wb.close_window();
