@@ -15,7 +15,6 @@ def drecexpbary(oracle, x0,
         - iterations []: Maximum number of iterations
      Out:
         - x []: Optimum position
-        - xs []: Optimum position evolution
     '''
     import numpy as np
     import scipy as scp
