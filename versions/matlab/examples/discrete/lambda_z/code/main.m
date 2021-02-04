@@ -29,6 +29,8 @@ n_iterations = 150;
 wb = my_waitbar('Calculating minimum...');
 lambda_zs = {1, 0.9 0.8, 0.7};
 
+options = struct('verbose', false);
+
 % Accelerated values
 zbars_lambdaz = {};
 xs_lambdaz = {};
@@ -48,11 +50,9 @@ for lambda_z = lambda_zs
                              lambda_z, nu, oracle);
         
         [~, xhats, ~, ~, deltas, zbars, ~, ~] = ...
-            drecexpbary_custom(oracle, m0, x0, ...
-                               nu, sigma, ...
-                               lambda, iterations, ...
-                               accel_fun, ...
-                               struct('verbose', true));
+            drecexpbary_custom(oracle, m0, x0, nu, sigma, ...
+                               lambda, iterations, accel_fun, ...
+                               options);
         
         clear(func2str(@integrated_accel));
         
@@ -80,10 +80,10 @@ markers = {markers_{1:length(lambda_zs)}};
 
 % Delta x plot
 plot_config.titles = {'', ''};
-plot_config.xlabels = {'', 'Iterations'};
+plot_config.xlabels = {'Iterations', 'Iterations'};
 plot_config.ylabels = {'$\Delta \hat{x}_1(\lambda_z)$', ...
                        '$\Delta \hat{x}_2(\lambda_z)$'};
-plot_config.grid_size = [2, 1];
+plot_config.grid_size = [1, 2];
 plot_config.plot_type = 'stem';
 plot_config.legends = {lambda_zs, lambda_zs};
 plot_config.pos_multiplots = [repmat(1, 1, length(lambda_zs)-1), ...
@@ -103,9 +103,9 @@ hfigs_delta = my_plot(iters, deltas, plot_config);
 
 % Acceleration plot
 plot_config.titles = {'', ''};
-plot_config.xlabels = {'', 'Iterations'};
+plot_config.xlabels = {'Iterations', 'Iterations'};
 plot_config.ylabels = {'$\bar{z}_1$', '$\bar{z}_2$'};
-plot_config.grid_size = [2, 1];
+plot_config.grid_size = [1, 2];
 plot_config.plot_type = 'stem';
 plot_config.legends = {lambda_zs, lambda_zs};
 plot_config.pos_multiplots = [repmat(1, 1, length(lambda_zs)-1), ...
@@ -126,10 +126,10 @@ hfigs_z = my_plot(iters, zs, plot_config);
 
 % x-coordinate plot
 plot_config.titles = {'', ''};
-plot_config.xlabels = {'', 'Iterations'};
+plot_config.xlabels = {'Iterations', 'Iterations'};
 plot_config.ylabels = {'$\hat{x}_1(\lambda_z)$', ...
                        '$\hat{x}_2(\lambda_z)$'};
-plot_config.grid_size = [2, 1];
+plot_config.grid_size = [1, 2];
 plot_config.plot_type = 'stem';
 plot_config.legends = {lambda_zs, lambda_zs};
 plot_config.pos_multiplots = [repmat(1, 1, length(lambda_zs)-1), ...
@@ -151,26 +151,88 @@ axs{1}{1}.XLim = [0 iterations];
 axs{1}{2}.XLim = [0 iterations];
 
 % Save folder
-path = [pwd '/../imgs/'];
+path = [pwd '/../imgs/'];lambda_zs = cellfun(@num2str, lambda_zs, 'UniformOutput', false);
+markers_ = {'k-', 'r--', '.b-', 'sg'};
+markers = {markers_{1:length(lambda_zs)}};
+
+% Delta x plot
+plot_config.titles = {'', ''};
+plot_config.xlabels = {'Iterations', 'Iterations'};
+plot_config.ylabels = {'$\Delta \hat{x}_1(\lambda_z)$', ...
+                       '$\Delta \hat{x}_2(\lambda_z)$'};
+plot_config.grid_size = [1, 2];
+plot_config.plot_type = 'stem';
+plot_config.legends = {lambda_zs, lambda_zs};
+plot_config.pos_multiplots = [repmat(1, 1, length(lambda_zs)-1), ...
+                              repmat(2, 1, length(lambda_zs)-1)];
+plot_config.markers = {markers, markers};
+plot_config.axis_style = 'square';
+
+delta_first = [deltas_lambdaz{1}(:, 1), deltas_lambdaz{1}(:, 2)];
+delta_multi = [deltas_lambdaz{2}(:, 1), deltas_lambdaz{3}(:, 1), ...
+               deltas_lambdaz{4}(:, 1), deltas_lambdaz{2}(:, 2), ...
+               deltas_lambdaz{3}(:, 2), deltas_lambdaz{4}(:, 2)];
+
+deltas = {delta_first, delta_multi};
+
+iters = 1:length(delta_first(:, 1));
+hfigs_delta = my_plot(iters, deltas, plot_config);
+
+% Acceleration plot
+plot_config.titles = {'', ''};
+plot_config.xlabels = {'Iterations', 'Iterations'};
+plot_config.ylabels = {'$\bar{z}_1$', '$\bar{z}_2$'};
+plot_config.grid_size = [1, 2];
+plot_config.plot_type = 'stem';
+plot_config.legends = {lambda_zs, lambda_zs};
+plot_config.pos_multiplots = [repmat(1, 1, length(lambda_zs)-1), ...
+                              repmat(2, 1, length(lambda_zs)-1)];
+plot_config.markers = {markers, markers};
+plot_config.axis_style = 'square';
+
+n = length(zbars_lambdaz{1}(:, 1));
+zbars_first = [zbars_lambdaz{1}(:, 1), zbars_lambdaz{1}(:, 2)];
+zbars_multi = [zbars_lambdaz{2}(:, 1), zbars_lambdaz{3}(:, 1), ...
+               zbars_lambdaz{4}(:, 1), zbars_lambdaz{2}(:, 2), ...
+               zbars_lambdaz{3}(:, 2), zbars_lambdaz{4}(:, 2)];
+
+zs = {zbars_first, zbars_multi};
+           
+iters = 1:length(zbars(:, 1));
+hfigs_z = my_plot(iters, zs, plot_config);
+
+% x-coordinate plot
+plot_config.titles = {'', ''};
+plot_config.xlabels = {'Iterations', 'Iterations'};
+plot_config.ylabels = {'$\hat{x}_1(\lambda_z)$', ...
+                       '$\hat{x}_2(\lambda_z)$'};
+plot_config.grid_size = [1, 2];
+plot_config.plot_type = 'stem';
+plot_config.legends = {lambda_zs, lambda_zs};
+plot_config.pos_multiplots = [repmat(1, 1, length(lambda_zs)-1), ...
+                              repmat(2, 1, length(lambda_zs)-1)];
+plot_config.markers = {markers, markers};
+plot_config.axis_style = 'square';
+
 fname = ['delta_', ...
-         sprintf('lamb%.2f', 100*lambda), ...
-         sprintf('sigma%.2f', 100*sigma), ...
+         sprintf('lamb%d', 100*lambda), ...
+         sprintf('sigma%d', 100*sigma), ...
          sprintf('nu%d', nu), ...
-         sprintf('lambz%.2f', 100*lambda_z)];
+         sprintf('lambz%d', 100*lambda_z)];
 saveas(hfigs_delta, [path, fname], 'epsc');
 
 fname = ['zbar_', ...
-         sprintf('lamb%.2f', 100*lambda), ...
-         sprintf('sigma%.2f', sigma), ...
-         sprintf('nu%.2f', nu), ...
-         sprintf('lambz%.2f', lambda_z)];
+         sprintf('lamb%d', 100*lambda), ...
+         sprintf('sigma%d', 100*sigma), ...
+         sprintf('nu%d', nu), ...
+         sprintf('lambz%d', 100*lambda_z)];
 saveas(hfigs_z, [path, fname], 'epsc');
 
 fname = ['xbars_', ...
-         sprintf('lamb%.2f', lambda), ...
-         sprintf('sigma%.2f', sigma), ...
-         sprintf('nu%.2f', nu), ...
-         sprintf('lambz%.2f', lambda_z)];
+         sprintf('lamb%d', 100*lambda), ...
+         sprintf('sigma%d', 100*sigma), ...
+         sprintf('nu%d', nu), ...
+         sprintf('lambz%d', 100*lambda_z)];
 saveas(hfigs_x_x0, [path, fname], 'epsc');
 
 

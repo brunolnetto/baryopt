@@ -16,7 +16,16 @@ function [x_star, xhats, xs, ms, ...
 %   - xs []: Optimum position evolution
     
     if(nargin == 8)
-        options = struct('verbose', false);
+        options = struct('verbose', false, ...
+                         'is_progress_visible', false);
+    end
+    
+    if(~isfield(options, 'verbose'))
+        options.verbose = false;
+    end
+    
+    if(~isfield(options, 'is_progress_visible'))
+        options.is_progress_visible = false;
     end
     
     alpha_n = 1;
@@ -49,7 +58,10 @@ function [x_star, xhats, xs, ms, ...
     max_grad0 = 0;
     
     j = 1;
-    wb = my_waitbar('Calculating minimum...');
+    
+    if(options.is_progress_visible)
+        wb = my_waitbar('Calculating minimum...');
+    end
     
     while(~solution_found)
        if(options.verbose)
@@ -102,12 +114,17 @@ function [x_star, xhats, xs, ms, ...
        Fbars_n = [Fbars_n; Fbar_n];
        zbars = [zbars; zbar'];
        
-       wb = wb.update_waitbar(j, iterations);
+       if(options.is_progress_visible)
+           wb = wb.update_waitbar(j, iterations);
+       end
        
        j = j + 1;
     end
     
-    wb.close_window();
+    if(options.is_progress_visible)
+       wb.close_window();
+   end
+    
     
     x_star = xhats(end, :)';
 end
